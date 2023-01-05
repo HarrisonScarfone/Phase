@@ -2,7 +2,7 @@
 
 #include "cli.hpp"
 
-void CLI::displayBoard()
+void Util::CLI::displayBoard()
 {
   std::cout << "This is finally working!!!";
 }

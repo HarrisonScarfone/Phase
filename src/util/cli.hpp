@@ -1,9 +1,14 @@
 #ifndef CLI_H
 #define CLI_H
 
-namespace CLI
+#include "../game/board.hpp"
+
+namespace Util
 {
-  void displayBoard();
+  namespace CLI
+  {
+    void displayBoard();
+  }
 }
 
 #endif
