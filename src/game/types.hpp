@@ -7,14 +7,14 @@ namespace Game
 {
   struct Position
   {
-    uint64_t black;
-    uint64_t white;
-    uint64_t kings;
-    uint64_t queens;
-    uint64_t rooks;
-    uint64_t bishops;
-    uint64_t knights;
-    uint64_t pawns;
+    uint64_t black = 0;
+    uint64_t white = 0;
+    uint64_t kings = 0;
+    uint64_t queens = 0;
+    uint64_t rooks = 0;
+    uint64_t bishops = 0;
+    uint64_t knights = 0;
+    uint64_t pawns = 0;
 
     bool white_to_move;
 

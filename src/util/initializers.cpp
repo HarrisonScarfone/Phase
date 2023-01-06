@@ -30,12 +30,26 @@ void Util::Initializers::update_position_from_fen_token_0(Game::Position *positi
 
     for (element = token.begin(); element != token.end(); element++)
     {
+        if (*element == '/')
+        {
+            continue;
+        }
+
         if (isdigit(*element))
         {
             square <<= int(*element) - 48;
         }
         else
         {
+            if (isupper(*element))
+            {
+                position->white |= square;
+            }
+            else
+            {
+                position->black |= square;
+            }
+
             switch (tolower(*element))
             {
             case 'k':
@@ -55,8 +69,6 @@ void Util::Initializers::update_position_from_fen_token_0(Game::Position *positi
             case 'p':
                 position->pawns |= square;
                 break;
-            case '/':
-                continue;
             default:
                 throw new std::invalid_argument("Invalid value in first FEN token.");
             }
