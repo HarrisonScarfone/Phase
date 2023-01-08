@@ -16,17 +16,17 @@ namespace Game
     uint64_t knights = 0;
     uint64_t pawns = 0;
 
-    bool white_to_move;
+    bool white_to_move = false;
 
-    bool white_can_castle_kingside;
-    bool white_can_castle_queenside;
-    bool black_can_castle_kingside;
-    bool black_can_castle_queenside;
+    bool white_can_castle_kingside = false;
+    bool white_can_castle_queenside = false;
+    bool black_can_castle_kingside = false;
+    bool black_can_castle_queenside = false;
 
-    uint64_t enPassantTarget;
+    uint64_t enPassantTarget = 0;
 
-    short int half_move_clock;
-    short int full_move_clock;
+    short int half_move_clock = 0;
+    short int full_move_clock = 0;
   };
 
   struct Move
