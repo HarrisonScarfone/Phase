@@ -1,7 +1,9 @@
 #include "util.hpp"
+#include "lookup.hpp"
 
 #include <iostream>
 #include <bitset>
+#include <map>
 
 std::vector<std::string> Util::tokenize_string_by_whitespace(std::string input_string)
 {
@@ -65,7 +67,7 @@ void Util::cli_display_position(Game::Position *position)
   std::cout << "\nWhite can castle queenside:\t\t" << position->white_can_castle_queenside;
   std::cout << "\nBlack can castle kingside:\t\t" << position->black_can_castle_kingside;
   std::cout << "\nBlack can castle queenside:\t\t" << position->black_can_castle_queenside;
-  std::cout << "\nEn passant capture available on:\t" << Util::uint64_t_to_coordinate(position->enPassantTarget);
+  std::cout << "\nEn passant capture available on:\t" << Util::Lookup::uint64_t_to_coordinate(position->enPassantTarget);
   std::cout << "\nHalf move clock:\t\t\t" << position->half_move_clock;
   std::cout << "\nFull move clock:\t\t\t" << position->full_move_clock;
   std::cout << "\n\n";
@@ -121,38 +123,4 @@ char Util::get_piece_as_char_from_square(Game::Position *position, int square)
   }
 
   return is_white ? toupper(piece) : piece;
-}
-
-uint64_t Util::coordinate_to_uint64_t(std::string coordinate)
-{
-  // Integers as char start at 0 = 48
-  // lower case char start 'a' = 97
-  uint64_t square = 1;
-  square <<= (8 * (8 - (coordinate.at(1) - 48))) + (tolower(coordinate.at(0)) - 97 - 1);
-  return square;
-}
-
-std::string Util::uint64_t_to_coordinate(uint64_t square)
-{
-  if (square == 0)
-  {
-    return "-";
-  }
-
-  int square_as_int = 0;
-  char file;
-  char rank;
-
-  while (square > 0)
-  {
-    square_as_int++;
-    square >>= 1;
-  }
-
-  // Integers as char start at 0 = 48
-  // lower case char start 'a' = 97
-  file = (square_as_int % 8) + 97;
-  rank = (8 - (square_as_int / 8)) + 48;
-
-  return std::string() + file + rank;
 }

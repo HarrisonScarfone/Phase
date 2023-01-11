@@ -1,8 +1,9 @@
-#include <iostream>
-#include <cstdint>
-
 #include "initializers.hpp"
 #include "util.hpp"
+#include "lookup.hpp"
+
+#include <iostream>
+#include <cstdint>
 
 Game::Position Util::Initializers::starting_position()
 {
@@ -126,7 +127,7 @@ void Util::Initializers::update_position_from_fen_token_3(Game::Position *positi
         }
         else
         {
-            position->enPassantTarget = Util::coordinate_to_uint64_t(token);
+            position->enPassantTarget = Util::Lookup::coordinate_to_uint64_t(token);
         }
     }
 }
