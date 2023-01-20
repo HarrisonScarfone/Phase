@@ -1,11 +1,29 @@
 #include "lookup.hpp"
 
-std::string Util::Lookup::uint64_t_to_coordinate(uint64_t square)
+std::string square_to_string(Square sq)
 {
-  return Util::Lookup::uint64_t_to_coordinate_map.find(square)->second;
+  int file = sq % 8;
+  int rank = sq / 8;
+  return (char)('a' + file) + std::to_string(rank + 1);
 }
 
-uint64_t Util::Lookup::coordinate_to_uint64_t(std::string coordinate)
+Square string_to_square(const std::string &str)
 {
-  return Util::Lookup::coordinate_to_uint64_t_map.find(coordinate)->second;
+  int file = str[0] - 'a';
+  int rank = str[1] - '1';
+  return static_cast<Square>(rank * 8 + file);
+}
+
+std::string bitboard_to_string(uint64_t bitboard)
+{
+  std::string str;
+  for (int i = 0; i < 64; i++)
+  {
+    if ((bitboard >> i) & 1)
+    {
+      str += square_to_string(static_cast<Square>(i));
+      str += " ";
+    }
+  }
+  return str;
 }

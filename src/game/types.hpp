@@ -3,10 +3,12 @@
 
 #include <cstdint>
 
-namespace Game
-{
-  struct Position
-  {
+namespace Game {
+  struct Move {
+    uint64_t move;
+  };
+
+  struct Position {
     uint64_t black = 0;
     uint64_t white = 0;
     uint64_t kings = 0;
@@ -28,11 +30,6 @@ namespace Game
     short int half_move_clock = 0;
     short int full_move_clock = 0;
   };
-
-  struct Move
-  {
-    /* data */
-  };
-}
+}  // namespace Game
 
 #endif

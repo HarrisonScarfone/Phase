@@ -1,9 +1,24 @@
 #include "util.hpp"
+
+#include <bitset>
+#include <iostream>
+#include <map>
+
 #include "lookup.hpp"
 
-#include <iostream>
-#include <bitset>
-#include <map>
+// clang-format off
+const int index64[64] = {
+  0,  1,  48, 2,  57, 49, 28, 3,  61, 58, 50, 42, 38, 29, 17, 4,  62, 55, 59, 36, 53, 51,
+  43, 22, 45, 39, 33, 30, 24, 18, 12, 5,  63, 47, 56, 27, 60, 41, 37, 16, 54, 35, 52, 21,
+  44, 32, 23, 11, 46, 26, 40, 15, 34, 20, 31, 10, 25, 14, 19, 9,  13, 8,  7,  6};
+// clang-format on
+
+// A forward bitscan
+int Util::bitscan(uint64_t bitboard)
+{
+  const uint64_t debruijn64 = static_cast<uint64_t>(0x03f79d71b4cb0a89);
+  return index64[((bitboard & -bitboard) * debruijn64) >> 58];
+}
 
 std::vector<std::string> Util::tokenize_string_by_whitespace(std::string input_string)
 {
@@ -22,9 +37,22 @@ std::vector<std::string> Util::tokenize_string_by_whitespace(std::string input_s
   return tokens;
 }
 
-void Util::display_64_bit_int_in_binary(uint64_t number)
+void Util::print_bitboard(uint64_t bitboard)
 {
-  std::cout << std::bitset<64>(number) << ' ';
+  for (int r = 7; r >= 0; --r)
+  {
+    std::cout << r + 1 << " ";
+
+    for (int f = 0; f < 8; ++f)
+    {
+      Square sq = static_cast<Square>(r * 8 + f);
+      std::cout << (bitboard & square_to_bitboard(sq) ? "X " : "- ");
+    }
+
+    std::cout << std::endl;
+  }
+
+  std::cout << "  a b c d e f g h" << std::endl;
 }
 
 void Util::cli_display_position(Game::Position *position)
@@ -36,14 +64,11 @@ void Util::cli_display_position(Game::Position *position)
 
   for (int i = 0; i < 8; i++)
   {
-
     std::cout << "  ---------------------------------\n";
     std::cout << rank << " ";
     for (int j = 0; j < 8; j++)
     {
-      std::cout << "| "
-                << Util::get_piece_as_char_from_square(position, (i * 8) + j)
-                << " ";
+      std::cout << "| " << Util::get_piece_as_char_from_square(position, (i * 8) + j) << " ";
     }
 
     --rank;
@@ -67,7 +92,7 @@ void Util::cli_display_position(Game::Position *position)
   std::cout << "\nWhite can castle queenside:\t\t" << position->white_can_castle_queenside;
   std::cout << "\nBlack can castle kingside:\t\t" << position->black_can_castle_kingside;
   std::cout << "\nBlack can castle queenside:\t\t" << position->black_can_castle_queenside;
-  std::cout << "\nEn passant capture available on:\t" << Util::Lookup::uint64_t_to_coordinate(position->enPassantTarget);
+  std::cout << "\nEn passant capture available on:\t" << bitboard_to_string(position->enPassantTarget);
   std::cout << "\nHalf move clock:\t\t\t" << position->half_move_clock;
   std::cout << "\nFull move clock:\t\t\t" << position->full_move_clock;
   std::cout << "\n\n";
