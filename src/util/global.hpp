@@ -1,10 +1,7 @@
-#ifndef LOOKUP_H
-#define LOOKUP_H
+#ifndef GLOBAL_H
+#define GLOBAL_H
 
-#include <array>
 #include <cstdint>
-#include <functional>
-#include <map>
 #include <string>
 
 // clang-format off
@@ -22,18 +19,44 @@ enum Square
 // clang-format on
 
 constexpr int file(Square sq) { return sq % 8; }
-
 constexpr int rank(Square sq) { return sq / 8; }
-
 constexpr uint64_t square_to_bitboard(Square sq) { return 1ull << sq; }
-
 constexpr Square bitboard_to_square(uint64_t bitboard)
 {
   return static_cast<Square>(__builtin_ctzll(bitboard & -bitboard));
 }
 
+struct Position
+{
+  uint64_t black = 0;
+  uint64_t white = 0;
+  uint64_t kings = 0;
+  uint64_t queens = 0;
+  uint64_t rooks = 0;
+  uint64_t bishops = 0;
+  uint64_t knights = 0;
+  uint64_t pawns = 0;
+
+  bool white_to_move = false;
+
+  bool white_can_castle_kingside = false;
+  bool white_can_castle_queenside = false;
+  bool black_can_castle_kingside = false;
+  bool black_can_castle_queenside = false;
+
+  uint64_t enPassantTarget = 0;
+
+  short int half_move_clock = 0;
+  short int full_move_clock = 0;
+};
+
 std::string square_to_string(Square sq);
 Square string_to_square(const std::string &str);
 std::string bitboard_to_string(uint64_t bitboard);
+
+struct Move
+{
+  uint64_t move;
+};
 
 #endif

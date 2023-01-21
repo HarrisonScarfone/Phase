@@ -3,18 +3,17 @@
 #include <cstdint>
 #include <iostream>
 
-#include "lookup.hpp"
 #include "util.hpp"
 
-Game::Position Util::Initializers::starting_position()
+Position Util::Initializers::starting_position()
 {
   std::string starting_position_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
   return Util::Initializers::fen_string_to_position(starting_position_fen);
 }
 
-Game::Position Util::Initializers::fen_string_to_position(std::string fen_string)
+Position Util::Initializers::fen_string_to_position(std::string fen_string)
 {
-  Game::Position new_position;
+  Position new_position;
   std::vector<std::string> tokens = Util::tokenize_string_by_whitespace(fen_string);
 
   // A fen string needs to generate 6 tokens. use - for whitespace (standard) // this a longer comment
@@ -33,7 +32,7 @@ Game::Position Util::Initializers::fen_string_to_position(std::string fen_string
   return new_position;
 }
 
-void Util::Initializers::update_position_from_fen_token_0(Game::Position *position, std::string token)
+void Util::Initializers::update_position_from_fen_token_0(Position *position, std::string token)
 {
   std::string::iterator element;
   uint64_t square = 1;
@@ -87,12 +86,12 @@ void Util::Initializers::update_position_from_fen_token_0(Game::Position *positi
   }
 }
 
-void Util::Initializers::update_position_from_fen_token_1(Game::Position *position, std::string token)
+void Util::Initializers::update_position_from_fen_token_1(Position *position, std::string token)
 {
   position->white_to_move = token == "w";
 }
 
-void Util::Initializers::update_position_from_fen_token_2(Game::Position *position, std::string token)
+void Util::Initializers::update_position_from_fen_token_2(Position *position, std::string token)
 {
   std::string::iterator element;
 
@@ -116,7 +115,7 @@ void Util::Initializers::update_position_from_fen_token_2(Game::Position *positi
   }
 }
 
-void Util::Initializers::update_position_from_fen_token_3(Game::Position *position, std::string token)
+void Util::Initializers::update_position_from_fen_token_3(Position *position, std::string token)
 {
   std::string::iterator element;
 
@@ -134,13 +133,13 @@ void Util::Initializers::update_position_from_fen_token_3(Game::Position *positi
   }
 }
 
-void Util::Initializers::update_position_from_fen_token_4(Game::Position *position, std::string token)
+void Util::Initializers::update_position_from_fen_token_4(Position *position, std::string token)
 {
   // Integers as char start at 0 = 48
   position->half_move_clock = token.at(0) - 48;
 }
 
-void Util::Initializers::update_position_from_fen_token_5(Game::Position *position, std::string token)
+void Util::Initializers::update_position_from_fen_token_5(Position *position, std::string token)
 {
   // Integers as char start at 0 = 48
   position->full_move_clock = token.at(0) - 48;

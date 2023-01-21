@@ -1,4 +1,4 @@
-#include "lookup.hpp"
+#include "global.hpp"
 
 std::string square_to_string(Square sq)
 {

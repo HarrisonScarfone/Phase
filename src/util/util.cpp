@@ -4,7 +4,7 @@
 #include <iostream>
 #include <map>
 
-#include "lookup.hpp"
+#include "global.hpp"
 
 // clang-format off
 const int index64[64] = {
@@ -39,13 +39,13 @@ std::vector<std::string> Util::tokenize_string_by_whitespace(std::string input_s
 
 void Util::print_bitboard(uint64_t bitboard)
 {
-  for (int r = 7; r >= 0; --r)
+  for (int i = 0; i < 8; i++)
   {
-    std::cout << r + 1 << " ";
+    std::cout << 8 - i << " ";
 
-    for (int f = 0; f < 8; ++f)
+    for (int j = 0; j < 8; j++)
     {
-      Square sq = static_cast<Square>(r * 8 + f);
+      Square sq = static_cast<Square>(i * 8 + j);
       std::cout << (bitboard & square_to_bitboard(sq) ? "X " : "- ");
     }
 
@@ -55,7 +55,7 @@ void Util::print_bitboard(uint64_t bitboard)
   std::cout << "  a b c d e f g h" << std::endl;
 }
 
-void Util::cli_display_position(Game::Position *position)
+void Util::cli_display_position(Position *position)
 {
   char file = 'A';
   int rank = 8;
@@ -85,9 +85,7 @@ void Util::cli_display_position(Game::Position *position)
   }
 
   std::cout << "\n\n";
-
   std::cout << "To move:\t\t\t\t" << (position->white_to_move ? "white" : "black");
-
   std::cout << "\nWhite can castle kingside:\t\t" << position->white_can_castle_kingside;
   std::cout << "\nWhite can castle queenside:\t\t" << position->white_can_castle_queenside;
   std::cout << "\nBlack can castle kingside:\t\t" << position->black_can_castle_kingside;
@@ -98,7 +96,7 @@ void Util::cli_display_position(Game::Position *position)
   std::cout << "\n\n";
 }
 
-char Util::get_piece_as_char_from_square(Game::Position *position, int square)
+char Util::get_piece_as_char_from_square(Position *position, int square)
 {
   uint64_t bitboard_square = static_cast<uint64_t>(1) << square;
   char piece;
