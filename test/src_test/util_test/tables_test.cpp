@@ -80,3 +80,42 @@ TEST(MoveTablesTest, KingMoves)
   // on e5
   EXPECT_EQ(king_moves[28], (7ull << 19 | 5ull << 27 | 7ull << 35));
 }
+// ------------------------------------------------------------------------------------------------
+// Bishop occupancy table tests
+// ------------------------------------------------------------------------------------------------
+TEST(MoveTablesTest, BishopOccupancy)
+{  // on a8
+  EXPECT_EQ(bishop_occupancy[0], 18049651735527936ull);
+  // on a7
+  EXPECT_EQ(bishop_occupancy[19], 70515108615168ull);
+  // on b2
+  EXPECT_EQ(bishop_occupancy[28], 637888545440768ull);
+  // on e5
+  EXPECT_EQ(bishop_occupancy[61], 22526811443298304ull);
+}
+// ------------------------------------------------------------------------------------------------
+// Rook occupancy table tests
+// ------------------------------------------------------------------------------------------------
+TEST(MoveTablesTest, RookOccupancy)
+{  // on a8
+  EXPECT_EQ(rook_occupancy[0], 0ull);
+  // on a7
+  EXPECT_EQ(rook_occupancy[19], 2260630408398848ull);
+  // on b2
+  EXPECT_EQ(rook_occupancy[28], 4521262379438080ull);
+  // on e5
+  EXPECT_EQ(rook_occupancy[61], 9042521604759552ull);
+}
+// ------------------------------------------------------------------------------------------------
+// Queen occupancy table tests
+// ------------------------------------------------------------------------------------------------
+TEST(MoveTablesTest, QueenOccupancy)
+{  // on a8
+  EXPECT_EQ(queen_occupancy[0], 18049651735527936ull);
+  // on a7
+  EXPECT_EQ(queen_occupancy[19], 2331145517014016ull);
+  // on b2
+  EXPECT_EQ(queen_occupancy[28], 5159150924878848ull);
+  // on e5
+  EXPECT_EQ(queen_occupancy[61], 31569333048057856ull);
+}

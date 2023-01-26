@@ -14,29 +14,12 @@ int main(int argc, char *argv[])
   // {
   //   Util::print_bitboard(pawn_attacks[0][i]);
   // }
-
-  auto pawn_new_att = pawn_attacks;
-  auto pawn_new_move = pawn_moves;
-  Util::print_bitboard(king_moves[0]);
-  Util::print_bitboard(king_moves[7]);
-  Util::print_bitboard(king_moves[39]);
-  Util::print_bitboard(king_moves[28]);
-  Util::print_bitboard(1ull << 28);
-  return 0;
+  Util::print_bitboard(pawn_attacks[0][1]);
+  Util::print_bitboard(pawn_attacks[0][25]);
+  Util::print_bitboard(pawn_attacks[0][27]);
+  Util::print_bitboard(pawn_attacks[0][39]);
+  // return 0;
 }
-
-// #include <iostream>
-// #include <array>
-// #include "util/util.hpp"
-
-// int main()
-// {
-//   uint64_t test = 1;
-//   test <<= 31;
-//   std::cout << lut_bitboard_to_coordinate[Util::bitscan(test)];
-//   std::cout << lut_bitboard_to_coordinate[Util::bitscan(test)];
-//   return 0;
-// }
 
 // 8 - - - - - - - -
 // 7 - - - - - - - -

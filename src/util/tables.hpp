@@ -15,6 +15,9 @@ constexpr auto pawn_attacks = make_pawn_attacks(pawn_attacks_for_square);
 constexpr auto pawn_moves = make_pawn_moves(pawn_moves_for_square);
 constexpr auto knight_moves = make_knight_moves(knight_moves_for_square);
 constexpr auto king_moves = make_king_moves(king_moves_for_square);
+constexpr auto bishop_occupancy = make_bishop_occupancy(bishop_occupancy_for_square);
+constexpr auto rook_occupancy = make_rook_occupancy(rook_occupancy_for_square);
+constexpr auto queen_occupancy = make_queen_occupancy(queen_occupancy_for_square);
 
 */
 
@@ -129,5 +132,85 @@ constexpr auto king_moves_for_square(uint64_t bitboard)
 }
 
 constexpr auto king_moves = make_king_moves(king_moves_for_square);
+
+template <typename Generator>
+constexpr auto make_bishop_occupancy(Generator&& f)
+{
+  std::array<uint64_t, 64> bishop_occupancy{};
+  uint64_t bitboard = 1;
+
+  for (int i = 0; i < 64; i++)
+  {
+    bishop_occupancy[i] = f(bitboard);
+    bitboard <<= 1;
+  }
+
+  return bishop_occupancy;
+}
+
+constexpr auto bishop_occupancy_for_square(uint64_t bitboard)
+{
+  uint64_t bishop_occupancy_bitboard = 0;
+  // note the 30 entries in the diagonal constant generation (constants.hpp)
+  for (int i = 0; i < 30; i++)
+  {
+    // each 1 bit bitboard only intersects 2 unique diagonals
+    if (bitboard & diagonal_masks[i])
+    {
+      bishop_occupancy_bitboard |= ~bitboard & diagonal_masks[i] & NOT_RANK_18_FILE_AH;
+    }
+  }
+
+  return bishop_occupancy_bitboard;
+}
+
+constexpr auto bishop_occupancy = make_bishop_occupancy(bishop_occupancy_for_square);
+
+template <typename Generator>
+constexpr auto make_rook_occupancy(Generator&& f)
+{
+  std::array<uint64_t, 64> rook_occupancy{};
+  uint64_t bitboard = 1;
+
+  for (int i = 0; i < 64; i++)
+  {
+    rook_occupancy[i] = f(bitboard);
+    bitboard <<= 1;
+  }
+
+  return rook_occupancy;
+}
+
+constexpr auto rook_occupancy_for_square(uint64_t bitboard)
+{
+  uint64_t rook_occupancy_bitboard = 0;
+  // note the 30 entries in the diagonal constant generation (constants.hpp)
+  for (int i = 0; i < 16; i++)
+  {
+    // each 1 bit bitboard only intersects 2 unique diagonals
+    if (bitboard & rank_and_file_masks[i])
+    {
+      rook_occupancy_bitboard |= ~bitboard & rank_and_file_masks[i] & NOT_RANK_18_FILE_AH;
+    }
+  }
+
+  return rook_occupancy_bitboard;
+}
+
+constexpr auto rook_occupancy = make_rook_occupancy(rook_occupancy_for_square);
+
+constexpr auto make_queen_occupancy()
+{
+  std::array<uint64_t, 64> queen_occupancy{};
+
+  for (int i = 0; i < 64; i++)
+  {
+    queen_occupancy[i] = bishop_occupancy[i] | rook_occupancy[i];
+  }
+
+  return queen_occupancy;
+}
+
+constexpr auto queen_occupancy = make_queen_occupancy();
 
 #endif
