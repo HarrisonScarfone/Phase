@@ -9,7 +9,6 @@
 
 namespace Util
 {
-int bitscan(uint64_t square);
 std::vector<std::string> tokenize_string_by_whitespace(std::string);
 
 char get_piece_as_char_from_square(Position *position, int square);

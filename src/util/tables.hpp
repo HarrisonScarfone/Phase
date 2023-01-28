@@ -15,10 +15,8 @@ constexpr auto pawn_attacks = make_pawn_attacks(pawn_attacks_for_bitboard);
 constexpr auto pawn_moves = make_pawn_moves(pawn_moves_for_bitboard);
 constexpr auto knight_moves = make_knight_moves(knight_moves_for_bitboard);
 constexpr auto king_moves = make_king_moves(king_moves_for_bitboard);
-constexpr auto bishop_occupancy = make_bishop_occupancy(bishop_occupancy_for_bitboard);
-constexpr auto rook_occupancy = make_rook_occupancy(rook_occupancy_for_bitboard);
-constexpr auto bishop_attack_masks = piece_table_generator(bishop_attack_mask_for_bitboard);
-constexpr auto rook_attack_masks = piece_table_generator(rook_attack_mask_for_bitboard);
+constexpr auto bishop_occupancy = make_bishop_occupancy(bishop_full_occupancy_for_bitboard);
+constexpr auto rook_occupancy = make_rook_occupancy(rook_full_occupancy_for_bitboard);
 
 */
 
@@ -98,7 +96,7 @@ constexpr auto king_moves_for_bitboard(uint64_t bitboard)
          ((bitboard & NOT_FILE_H & NOT_RANK_1) << 9);
 }
 
-constexpr auto bishop_occupancy_for_bitboard(uint64_t bitboard)
+constexpr auto bishop_full_occupancy_for_bitboard(uint64_t bitboard)
 {
   uint64_t bishop_occupancy_bitboard = 0;
   for (int i = 0; i < 30; i++)
@@ -112,7 +110,7 @@ constexpr auto bishop_occupancy_for_bitboard(uint64_t bitboard)
   return bishop_occupancy_bitboard;
 }
 
-constexpr auto rook_occupancy_for_bitboard(uint64_t bitboard)
+constexpr auto rook_full_occupancy_for_bitboard(uint64_t bitboard)
 {
   uint64_t rook_occupancy_bitboard = 0;
   uint64_t edge_mask = 0;
@@ -145,39 +143,153 @@ constexpr auto rook_occupancy_for_bitboard(uint64_t bitboard)
   return rook_occupancy_bitboard;
 }
 
-constexpr auto bishop_attack_mask_for_bitboard(uint64_t bitboard)
-{
-  uint64_t bishop_attack_mask_bitboard = 0;
-  for (int i = 0; i < 30; i++)
-  {
-    if (bitboard & diagonal_masks[i])
-    {
-      bishop_attack_mask_bitboard |= ~bitboard & diagonal_masks[i];
-    }
-  }
-
-  return bishop_attack_mask_bitboard;
-}
-
-constexpr auto rook_attack_mask_for_bitboard(uint64_t bitboard)
-{
-  uint64_t rook_attack_mask_bitboard = 0;
-  for (int i = 0; i < 16; i++)
-  {
-    if (bitboard & rank_and_file_masks[i])
-    {
-      rook_attack_mask_bitboard |= ~bitboard & rank_and_file_masks[i];
-    }
-  }
-
-  return rook_attack_mask_bitboard;
-}
-
 constexpr auto knight_moves = piece_table_generator(knight_moves_for_bitboard);
 constexpr auto king_moves = piece_table_generator(king_moves_for_bitboard);
-constexpr auto bishop_occupancy = piece_table_generator(bishop_occupancy_for_bitboard);
-constexpr auto rook_occupancy = piece_table_generator(rook_occupancy_for_bitboard);
-constexpr auto bishop_attack_masks = piece_table_generator(bishop_attack_mask_for_bitboard);
-constexpr auto rook_attack_masks = piece_table_generator(rook_attack_mask_for_bitboard);
+constexpr auto bishop_full_occupancy = piece_table_generator(bishop_full_occupancy_for_bitboard);
+constexpr auto rook_full_occupancy = piece_table_generator(rook_full_occupancy_for_bitboard);
+
+constexpr auto bishop_attack_mask_for_bitboard(uint64_t bitboard, uint64_t blocker_bitboard)
+{
+  uint64_t attack_mask = 0;
+  uint64_t temp_bitboard = 0;
+
+  // down the right
+  for (int i = 1; i < 8; i++)
+  {
+    temp_bitboard = bitboard << (9 * i);
+    attack_mask |= temp_bitboard;
+    if (temp_bitboard & blocker_bitboard)
+    {
+      break;
+    }
+  }
+
+  // down the left
+  for (int i = 1; i < 8; i++)
+  {
+    temp_bitboard = bitboard << (7 * i);
+    attack_mask |= temp_bitboard;
+    if (temp_bitboard & blocker_bitboard)
+    {
+      break;
+    }
+  }
+
+  // up to the right
+  for (int i = 1; i < 8; i++)
+  {
+    temp_bitboard = bitboard >> (7 * i);
+    attack_mask |= temp_bitboard;
+    if (temp_bitboard & blocker_bitboard)
+    {
+      break;
+    }
+  }
+
+  // down the right
+  for (int i = 1; i < 8; i++)
+  {
+    temp_bitboard = bitboard >> (9 * i);
+    attack_mask |= temp_bitboard;
+    if (temp_bitboard & blocker_bitboard)
+    {
+      break;
+    }
+  }
+
+  return attack_mask;
+}
+
+constexpr auto rook_attack_mask_for_bitboard(uint64_t bitboard, uint64_t blocker_bitboard)
+{
+  uint64_t attack_mask = 0;
+  uint64_t temp_bitboard = 0;
+
+  int file = bitscan(bitboard) % 8;
+
+  // to the right
+  for (int i = 1; i < 8 - file; i++)
+  {
+    temp_bitboard = bitboard << i;
+    attack_mask |= temp_bitboard;
+    if (temp_bitboard & blocker_bitboard)
+    {
+      break;
+    }
+  }
+
+  // to the left
+  for (int i = 1; i < 1 + file; i++)
+  {
+    temp_bitboard = bitboard >> i;
+    attack_mask |= temp_bitboard;
+    if (temp_bitboard & blocker_bitboard)
+    {
+      break;
+    }
+  }
+
+  // up
+  for (int i = 1; i < 8; i++)
+  {
+    temp_bitboard = bitboard >> (8 * i);
+    attack_mask |= temp_bitboard;
+    if (temp_bitboard & blocker_bitboard)
+    {
+      break;
+    }
+  }
+
+  // down
+  for (int i = 1; i < 8; i++)
+  {
+    temp_bitboard = bitboard << (8 * i);
+    attack_mask |= temp_bitboard;
+    if (temp_bitboard & blocker_bitboard)
+    {
+      break;
+    }
+  }
+
+  return attack_mask;
+}
+
+constexpr uint64_t construct_occupancies(int occupancy_index, int occupancy_map_bits, uint64_t occupancy_map)
+{
+  uint64_t bitboard = 0;
+
+  for (int i = 0; i < occupancy_map_bits; i++)
+  {
+    int square = bitscan(occupancy_map);
+    occupancy_map ^= 1ull << square;
+
+    if (occupancy_index & (1 << i))
+    {
+      bitboard |= (1ull << square);
+    }
+  }
+
+  return bitboard;
+}
+
+template <typename Generator>
+constexpr auto occupancy_bits(Generator&& f)
+{
+  std::array<int, 64> occupancy_bits_for_square{};
+
+  for (int i = 0; i < 64; i++)
+  {
+    occupancy_bits_for_square[i] = f(i);
+  }
+
+  return occupancy_bits_for_square;
+}
+
+constexpr auto bishop_occupany_bits_for_square(int square) { return bitcount(bishop_full_occupancy[square]); }
+
+constexpr auto rook_occupany_bits_for_square(int square) { return bitcount(rook_full_occupancy[square]); }
+
+constexpr auto bishop_occupancy = occupancy_bits(bishop_occupany_bits_for_square);
+constexpr auto rook_occupancy = occupancy_bits(rook_occupany_bits_for_square);
 
 #endif

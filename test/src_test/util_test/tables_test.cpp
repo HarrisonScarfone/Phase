@@ -85,50 +85,50 @@ TEST(MoveTables, KingMoves)
 // ------------------------------------------------------------------------------------------------
 TEST(MoveTables, BishopOccupancy)
 {  // on a8
-  EXPECT_EQ(bishop_occupancy[0], 18049651735527936ull);
+  EXPECT_EQ(bishop_full_occupancy[0], 18049651735527936ull);
   // on a7
-  EXPECT_EQ(bishop_occupancy[19], 70515108615168ull);
+  EXPECT_EQ(bishop_full_occupancy[19], 70515108615168ull);
   // on b2
-  EXPECT_EQ(bishop_occupancy[28], 637888545440768ull);
+  EXPECT_EQ(bishop_full_occupancy[28], 637888545440768ull);
   // on e5
-  EXPECT_EQ(bishop_occupancy[61], 22526811443298304ull);
+  EXPECT_EQ(bishop_full_occupancy[61], 22526811443298304ull);
 }
 // ------------------------------------------------------------------------------------------------
 // Rook occupancy table tests
 // ------------------------------------------------------------------------------------------------
 TEST(MoveTables, RookOccupancy)
 {  // on a8
-  EXPECT_EQ(rook_occupancy[0], 282578800148862ull);
+  EXPECT_EQ(rook_full_occupancy[0], 282578800148862ull);
   // on a7
-  EXPECT_EQ(rook_occupancy[19], 2260630408398848ull);
+  EXPECT_EQ(rook_full_occupancy[19], 2260630408398848ull);
   // on b2
-  EXPECT_EQ(rook_occupancy[28], 4521262379438080ull);
+  EXPECT_EQ(rook_full_occupancy[28], 4521262379438080ull);
   // on e5
-  EXPECT_EQ(rook_occupancy[61], 6782456361169985536ull);
+  EXPECT_EQ(rook_full_occupancy[61], 6782456361169985536ull);
 }
-// ------------------------------------------------------------------------------------------------
-// Bishop attack masks table tests
-// ------------------------------------------------------------------------------------------------
-TEST(MoveTables, BishopAttackMasks)
-{  // on a8
-  EXPECT_EQ(bishop_attack_masks[0], 9241421688590303744ull);
-  // on a7
-  EXPECT_EQ(bishop_attack_masks[19], 36100411639206946ull);
-  // on b2
-  EXPECT_EQ(bishop_attack_masks[28], 108724279602332802ull);
-  // on e5
-  EXPECT_EQ(bishop_attack_masks[61], 22667548931719168ull);
-}
-// ------------------------------------------------------------------------------------------------
-// Bishop attack masks table tests
-// ------------------------------------------------------------------------------------------------
-TEST(MoveTables, RookAttackMasks)
-{  // on a8
-  EXPECT_EQ(rook_attack_masks[0], 72340172838076926ull);
-  // on a7
-  EXPECT_EQ(rook_attack_masks[19], 578721382720276488ull);
-  // on b2
-  EXPECT_EQ(rook_attack_masks[28], 1157442769150545936ull);
-  // on e5
-  EXPECT_EQ(rook_attack_masks[61], 16077885992062689312ull);
-}
+// // ------------------------------------------------------------------------------------------------
+// // Bishop attack masks table tests
+// // ------------------------------------------------------------------------------------------------
+// TEST(MoveTables, BishopAttackMasks)
+// {  // on a8
+//   EXPECT_EQ(bishop_attack_masks[0], 9241421688590303744ull);
+//   // on a7
+//   EXPECT_EQ(bishop_attack_masks[19], 36100411639206946ull);
+//   // on b2
+//   EXPECT_EQ(bishop_attack_masks[28], 108724279602332802ull);
+//   // on e5
+//   EXPECT_EQ(bishop_attack_masks[61], 22667548931719168ull);
+// }
+// // ------------------------------------------------------------------------------------------------
+// // Bishop attack masks table tests
+// // ------------------------------------------------------------------------------------------------
+// TEST(MoveTables, RookAttackMasks)
+// {  // on a8
+//   EXPECT_EQ(rook_attack_masks[0], 72340172838076926ull);
+//   // on a7
+//   EXPECT_EQ(rook_attack_masks[19], 578721382720276488ull);
+//   // on b2
+//   EXPECT_EQ(rook_attack_masks[28], 1157442769150545936ull);
+//   // on e5
+//   EXPECT_EQ(rook_attack_masks[61], 16077885992062689312ull);
+// }
