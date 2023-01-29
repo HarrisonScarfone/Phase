@@ -366,19 +366,14 @@ constexpr uint64_t generate_magic_number(int square, int occupancy_bits, bool ro
       continue;
     }
 
-    if (magic_candidate == 9979994641325359136ull)
-    {
-      int a = 1;
-      a++;
-    }
-
     bool fail = false;
-    memset(seen_attacks, 0, (1 << occupancy_bits) * sizeof(uint16_t));
+    memset(seen_attacks, 0, (1 << occupancy_bits) * sizeof(uint64_t));
 
     for (int index = 0; index < array_entries; index++)
     {
       if (fail) break;
-      int magic_index = (occupancies[index] * magic_candidate) >> (64 - occupancy_bits);
+
+      int magic_index = int((occupancies[index] * magic_candidate) >> (64 - occupancy_bits));
 
       if (seen_attacks[magic_index] == 0ull)
       {
