@@ -1,4 +1,4 @@
-#include "../../../src/util/tables.hpp"
+#include "../../../src/util/magicgen.hpp"
 
 #include <gtest/gtest.h>
 

@@ -23,8 +23,8 @@ constexpr int bitcount(uint64_t bitboard)
   int count = 0;
   while (bitboard)
   {
-    bitboard &= bitboard - 1;
     count++;
+    bitboard &= bitboard - 1;
   }
   return count;
 }
