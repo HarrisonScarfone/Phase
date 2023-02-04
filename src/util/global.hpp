@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <string>
 
+#
+
 // clang-format off
 constexpr int index64[64] = {
   0,  1,  48, 2,  57, 49, 28, 3,  61, 58, 50, 42, 38, 29, 17, 4,  62, 55, 59, 36, 53, 51,
@@ -51,6 +53,19 @@ constexpr Square bitboard_to_square(uint64_t bitboard)
   return static_cast<Square>(__builtin_ctzll(bitboard & -bitboard));
 }
 
+inline uint64_t white_kings(Position position) { return position.white & position.kings; }
+inline uint64_t white_queens(Position position) { return position.white & position.queens; }
+inline uint64_t white_rooks(Position position) { return position.white & position.rooks; }
+inline uint64_t white_bishops(Position position) { return position.white & position.bishops; }
+inline uint64_t white_knights(Position position) { return position.white & position.knights; }
+inline uint64_t white_pawns(Position position) { return position.white & position.pawns; }
+inline uint64_t black_kings(Position position) { return position.black & position.kings; }
+inline uint64_t black_queens(Position position) { return position.black & position.queens; }
+inline uint64_t black_rooks(Position position) { return position.black & position.rooks; }
+inline uint64_t black_bishops(Position position) { return position.black & position.bishops; }
+inline uint64_t black_knights(Position position) { return position.black & position.knights; }
+inline uint64_t black_pawns(Position position) { return position.black & position.pawns; }
+
 struct Position
 {
   uint64_t black = 0;
@@ -78,10 +93,5 @@ struct Position
 std::string square_to_string(Square sq);
 Square string_to_square(const std::string &str);
 std::string bitboard_to_string(uint64_t bitboard);
-
-struct Move
-{
-  uint64_t move;
-};
 
 #endif

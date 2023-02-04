@@ -11,50 +11,7 @@
 #include "global.hpp"
 
 template <typename Generator>
-constexpr auto pawn_table_generator(Generator&& f)
-{
-  std::array<std::array<uint64_t, 64>, 2> pawn_attack_table{};
-  uint64_t bitboard = 1;
-
-  for (int i = 0; i < 64; i++)
-  {
-    pawn_attack_table[1][i] = f(1, bitboard);
-    pawn_attack_table[0][i] = f(0, bitboard);
-    bitboard <<= 1;
-  }
-
-  return pawn_attack_table;
-}
-
-constexpr auto pawn_attacks_for_bitboard(bool white, uint64_t bitboard)
-{
-  if (white)
-  {
-    return ((bitboard & NOT_FILE_H & NOT_RANK_18) >> 7) | ((bitboard & NOT_FILE_A & NOT_RANK_18) >> 9);
-  }
-  else
-  {
-    return ((bitboard & NOT_FILE_A & NOT_RANK_18) << 7) | ((bitboard & NOT_FILE_H & NOT_RANK_18) << 9);
-  }
-}
-
-constexpr auto pawn_moves_for_bitboard(bool white, uint64_t bitboard)
-{
-  if (white)
-  {
-    return ((bitboard & NOT_RANK_18 & NOT_RANK_7) >> 8) | ((bitboard & RANK_2) >> 16);
-  }
-  else
-  {
-    return ((bitboard & NOT_RANK_18 & NOT_RANK_2) << 8) | ((bitboard & RANK_7) << 16);
-  }
-}
-
-constexpr auto pawn_attacks = pawn_table_generator(pawn_attacks_for_bitboard);
-constexpr auto pawn_moves = pawn_table_generator(pawn_moves_for_bitboard);
-
-template <typename Generator>
-constexpr auto piece_table_generator(Generator&& f)
+constexpr auto piece_table_occupancy_generator(Generator&& f)
 {
   std::array<uint64_t, 64> table{};
   uint64_t bitboard = 1;
@@ -66,24 +23,6 @@ constexpr auto piece_table_generator(Generator&& f)
   }
 
   return table;
-}
-
-constexpr auto knight_moves_for_bitboard(uint64_t bitboard)
-{
-  // starting from the knight position, right and up then ctrclkwise about the knight square
-  return ((bitboard & NOT_FILE_GH & NOT_RANK_8) >> 6) | ((bitboard & NOT_RANK_78 & NOT_FILE_H) >> 15) |
-         ((bitboard & NOT_RANK_78 & NOT_FILE_A) >> 17) | ((bitboard & NOT_FILE_AB & NOT_RANK_8) >> 10) |
-         ((bitboard & NOT_FILE_AB & NOT_RANK_1) << 6) | ((bitboard & NOT_RANK_12 & NOT_FILE_A) << 15) |
-         ((bitboard & NOT_RANK_12 & NOT_FILE_H) << 17) | ((bitboard & NOT_FILE_GH & NOT_RANK_1) << 10);
-}
-
-constexpr auto king_moves_for_bitboard(uint64_t bitboard)
-{
-  // starting from kings square, the square to the right then ctrclkwise about the king
-  return ((bitboard & NOT_FILE_H) << 1) | ((bitboard & NOT_FILE_H & NOT_RANK_8) >> 7) | ((bitboard & NOT_RANK_8) >> 8) |
-         ((bitboard & NOT_FILE_A & NOT_RANK_8) >> 9) | ((bitboard & NOT_FILE_A) >> 1) |
-         ((bitboard & NOT_FILE_A & NOT_RANK_1) << 7) | ((bitboard & NOT_RANK_1) << 8) |
-         ((bitboard & NOT_FILE_H & NOT_RANK_1) << 9);
 }
 
 constexpr auto bishop_full_occupancy_for_bitboard(uint64_t bitboard)
@@ -133,10 +72,8 @@ constexpr auto rook_full_occupancy_for_bitboard(uint64_t bitboard)
   return rook_occupancy_bitboard;
 }
 
-constexpr auto knight_moves = piece_table_generator(knight_moves_for_bitboard);
-constexpr auto king_moves = piece_table_generator(king_moves_for_bitboard);
-constexpr auto bishop_full_occupancy = piece_table_generator(bishop_full_occupancy_for_bitboard);
-constexpr auto rook_full_occupancy = piece_table_generator(rook_full_occupancy_for_bitboard);
+constexpr auto bishop_full_occupancy = piece_table_occupancy_generator(bishop_full_occupancy_for_bitboard);
+constexpr auto rook_full_occupancy = piece_table_occupancy_generator(rook_full_occupancy_for_bitboard);
 
 template <typename Generator>
 constexpr auto occupancy_bits(Generator&& f)
@@ -152,7 +89,6 @@ constexpr auto occupancy_bits(Generator&& f)
 }
 
 constexpr auto bishop_occupany_bits_for_square(int square) { return bitcount(bishop_full_occupancy[square]); }
-
 constexpr auto rook_occupany_bits_for_square(int square) { return bitcount(rook_full_occupancy[square]); }
 
 constexpr auto bishop_occupancy = occupancy_bits(bishop_occupany_bits_for_square);
@@ -355,12 +291,14 @@ constexpr uint64_t generate_magic_number(int square, int occupancy_bits, bool ro
   for (int i = 0; i < array_entries; i++)
   {
     occupancies[i] = construct_occupancies(i, occupancy_bits, occupancy_mask);
-    attacks[i] = rook_attack_mask_for_bitboard(bitboard, occupancies[i]);
+    attacks[i] = rooks ? rook_attack_mask_for_bitboard(bitboard, occupancies[i])
+                       : bishop_attack_mask_for_bitboard(bitboard, occupancies[i]);
   }
 
   for (int i = 0; i < 1ull << 30; i++)
   {
     uint64_t magic_candidate = generate_magic_number_candidate();
+
     if (bitcount((occupancy_mask * magic_candidate) & 0xFF00000000000000ull) < 6)
     {
       continue;
@@ -405,7 +343,7 @@ constexpr void generate_all_magic_numbers(Generator&& f)
 
 constexpr auto generate_bishop_magic_numbers(int square)
 {
-  return generate_magic_number(square, bishop_occupancy[square], true);
+  return generate_magic_number(square, bishop_occupancy[square], false);
 }
 
 constexpr auto generate_rook_magic_numbers(int square)
@@ -416,5 +354,6 @@ constexpr auto generate_rook_magic_numbers(int square)
 // the numbers once and can save in a const array after
 void display_bishop_magic_numbers();
 void display_rook_magic_numbers();
+void display_all_magic_numbers();
 
 #endif

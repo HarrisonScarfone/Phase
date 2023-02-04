@@ -9,28 +9,93 @@
 #include "magicgen.hpp"
 #include "util.hpp"
 
+template <typename Generator>
+constexpr auto pawn_table_generator(Generator&& f)
+{
+  std::array<std::array<uint64_t, 64>, 2> pawn_attack_table{};
+  uint64_t bitboard = 1;
+
+  for (int i = 0; i < 64; i++)
+  {
+    pawn_attack_table[1][i] = f(1, bitboard);
+    pawn_attack_table[0][i] = f(0, bitboard);
+    bitboard <<= 1;
+  }
+
+  return pawn_attack_table;
+}
+
+constexpr auto pawn_attacks_for_bitboard(bool white, uint64_t bitboard)
+{
+  if (white)
+  {
+    return ((bitboard & NOT_FILE_H & NOT_RANK_18) >> 7) | ((bitboard & NOT_FILE_A & NOT_RANK_18) >> 9);
+  }
+  else
+  {
+    return ((bitboard & NOT_FILE_A & NOT_RANK_18) << 7) | ((bitboard & NOT_FILE_H & NOT_RANK_18) << 9);
+  }
+}
+
+constexpr auto pawn_moves_for_bitboard(bool white, uint64_t bitboard)
+{
+  if (white)
+  {
+    return ((bitboard & NOT_RANK_18 & NOT_RANK_7) >> 8) | ((bitboard & RANK_2) >> 16);
+  }
+  else
+  {
+    return ((bitboard & NOT_RANK_18 & NOT_RANK_2) << 8) | ((bitboard & RANK_7) << 16);
+  }
+}
+
+constexpr auto pawn_attacks = pawn_table_generator(pawn_attacks_for_bitboard);
+constexpr auto pawn_moves = pawn_table_generator(pawn_moves_for_bitboard);
+
+template <typename Generator>
+constexpr auto piece_table_generator(Generator&& f)
+{
+  std::array<uint64_t, 64> table{};
+  uint64_t bitboard = 1;
+
+  for (int i = 0; i < 64; i++)
+  {
+    table[i] = f(bitboard);
+    bitboard <<= 1;
+  }
+
+  return table;
+}
+
+constexpr auto knight_moves_for_bitboard(uint64_t bitboard)
+{
+  // starting from the knight position, right and up then ctrclkwise about the knight square
+  return ((bitboard & NOT_FILE_GH & NOT_RANK_8) >> 6) | ((bitboard & NOT_RANK_78 & NOT_FILE_H) >> 15) |
+         ((bitboard & NOT_RANK_78 & NOT_FILE_A) >> 17) | ((bitboard & NOT_FILE_AB & NOT_RANK_8) >> 10) |
+         ((bitboard & NOT_FILE_AB & NOT_RANK_1) << 6) | ((bitboard & NOT_RANK_12 & NOT_FILE_A) << 15) |
+         ((bitboard & NOT_RANK_12 & NOT_FILE_H) << 17) | ((bitboard & NOT_FILE_GH & NOT_RANK_1) << 10);
+}
+
+constexpr auto king_moves_for_bitboard(uint64_t bitboard)
+{
+  // starting from kings square, the square to the right then ctrclkwise about the king
+  return ((bitboard & NOT_FILE_H) << 1) | ((bitboard & NOT_FILE_H & NOT_RANK_8) >> 7) | ((bitboard & NOT_RANK_8) >> 8) |
+         ((bitboard & NOT_FILE_A & NOT_RANK_8) >> 9) | ((bitboard & NOT_FILE_A) >> 1) |
+         ((bitboard & NOT_FILE_A & NOT_RANK_1) << 7) | ((bitboard & NOT_RANK_1) << 8) |
+         ((bitboard & NOT_FILE_H & NOT_RANK_1) << 9);
+}
+
+constexpr auto knight_moves = piece_table_generator(knight_moves_for_bitboard);
+constexpr auto king_moves = piece_table_generator(king_moves_for_bitboard);
+
 struct MagicBB
 {
   uint64_t mask;
   uint64_t magic;
 };
 
-// the generated magic numbers since we only need to run this once
-constexpr std::array<uint64_t, 64> bishop_magic_numbers = {
-    0x40040844404084ULL,   0x2004208a004208ULL,   0x10190041080202ULL,   0x108060845042010ULL,  0x581104180800210ULL,
-    0x2112080446200010ULL, 0x1080820820060210ULL, 0x3c0808410220200ULL,  0x4050404440404ULL,    0x21001420088ULL,
-    0x24d0080801082102ULL, 0x1020a0a020400ULL,    0x40308200402ULL,      0x4011002100800ULL,    0x401484104104005ULL,
-    0x801010402020200ULL,  0x400210c3880100ULL,   0x404022024108200ULL,  0x810018200204102ULL,  0x4002801a02003ULL,
-    0x85040820080400ULL,   0x810102c808880400ULL, 0xe900410884800ULL,    0x8002020480840102ULL, 0x220200865090201ULL,
-    0x2010100a02021202ULL, 0x152048408022401ULL,  0x20080002081110ULL,   0x4001001021004000ULL, 0x800040400a011002ULL,
-    0xe4004081011002ULL,   0x1c004001012080ULL,   0x8004200962a00220ULL, 0x8422100208500202ULL, 0x2000402200300c08ULL,
-    0x8646020080080080ULL, 0x80020a0200100808ULL, 0x2010004880111000ULL, 0x623000a080011400ULL, 0x42008c0340209202ULL,
-    0x209188240001000ULL,  0x400408a884001800ULL, 0x110400a6080400ULL,   0x1840060a44020800ULL, 0x90080104000041ULL,
-    0x201011000808101ULL,  0x1a2208080504f080ULL, 0x8012020600211212ULL, 0x500861011240000ULL,  0x180806108200800ULL,
-    0x4000020e01040044ULL, 0x300000261044000aULL, 0x802241102020002ULL,  0x20906061210001ULL,   0x5a84841004010310ULL,
-    0x4010801011c04ULL,    0xa010109502200ULL,    0x4a02012000ULL,       0x500201010098b028ULL, 0x8040002811040900ULL,
-    0x28000010020204ULL,   0x6000020202d0240ULL,  0x8918844842082200ULL, 0x4010011029020020ULL};
-
+// Easier to store the magic numbers then generate them at compile time
+// See `generate_magic_numbers` in `magicgen.hpp`
 constexpr std::array<uint64_t, 64> rook_magic_numbers = {
     0x8a80104000800020ULL, 0x140002000100040ULL,  0x2801880a0017001ULL,  0x100081001000420ULL,  0x200020010080420ULL,
     0x3001c0002010008ULL,  0x8480008002000100ULL, 0x2080088004402900ULL, 0x800098204000ULL,     0x2024401000200040ULL,
@@ -45,6 +110,21 @@ constexpr std::array<uint64_t, 64> rook_magic_numbers = {
     0x4008142004410100ULL, 0x2060820c0120200ULL,  0x1001004080100ULL,    0x20c020080040080ULL,  0x2935610830022400ULL,
     0x44440041009200ULL,   0x280001040802101ULL,  0x2100190040002085ULL, 0x80c0084100102001ULL, 0x4024081001000421ULL,
     0x20030a0244872ULL,    0x12001008414402ULL,   0x2006104900a0804ULL,  0x1004081002402ULL};
+
+constexpr std::array<uint64_t, 64> bishop_magic_numbers = {
+    0x40040844404084ULL,   0x2004208a004208ULL,   0x10190041080202ULL,   0x108060845042010ULL,  0x581104180800210ULL,
+    0x2112080446200010ULL, 0x1080820820060210ULL, 0x3c0808410220200ULL,  0x4050404440404ULL,    0x21001420088ULL,
+    0x24d0080801082102ULL, 0x1020a0a020400ULL,    0x40308200402ULL,      0x4011002100800ULL,    0x401484104104005ULL,
+    0x801010402020200ULL,  0x400210c3880100ULL,   0x404022024108200ULL,  0x810018200204102ULL,  0x4002801a02003ULL,
+    0x85040820080400ULL,   0x810102c808880400ULL, 0xe900410884800ULL,    0x8002020480840102ULL, 0x220200865090201ULL,
+    0x2010100a02021202ULL, 0x152048408022401ULL,  0x20080002081110ULL,   0x4001001021004000ULL, 0x800040400a011002ULL,
+    0xe4004081011002ULL,   0x1c004001012080ULL,   0x8004200962a00220ULL, 0x8422100208500202ULL, 0x2000402200300c08ULL,
+    0x8646020080080080ULL, 0x80020a0200100808ULL, 0x2010004880111000ULL, 0x623000a080011400ULL, 0x42008c0340209202ULL,
+    0x209188240001000ULL,  0x400408a884001800ULL, 0x110400a6080400ULL,   0x1840060a44020800ULL, 0x90080104000041ULL,
+    0x201011000808101ULL,  0x1a2208080504f080ULL, 0x8012020600211212ULL, 0x500861011240000ULL,  0x180806108200800ULL,
+    0x4000020e01040044ULL, 0x300000261044000aULL, 0x802241102020002ULL,  0x20906061210001ULL,   0x5a84841004010310ULL,
+    0x4010801011c04ULL,    0xa010109502200ULL,    0x4a02012000ULL,       0x500201010098b028ULL, 0x8040002811040900ULL,
+    0x28000010020204ULL,   0x6000020202d0240ULL,  0x8918844842082200ULL, 0x4010011029020020ULL};
 
 template <std::size_t Length, bool rooks>
 constexpr auto attack_table()
@@ -108,6 +188,11 @@ uint64_t rook_attacks(uint64_t occupancy, int square)
   occupancy *= magic_rook_table[square].magic;
   occupancy >>= 64 - rook_occupancy[square];
   return magic_rook_attacks[square][occupancy];
+}
+
+uint64_t queen_attacks(uint64_t occupancy, int square)
+{
+  return bishop_attacks(occupancy, square) | rook_attacks(occupancy, square);
 }
 
 #endif

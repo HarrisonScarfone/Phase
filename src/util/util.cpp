@@ -54,7 +54,7 @@ void Util::cli_display_position(Position *position)
     std::cout << rank << " ";
     for (int j = 0; j < 8; j++)
     {
-      std::cout << "| " << Util::get_piece_as_char_from_square(position, (i * 8) + j) << " ";
+      std::cout << "| " << Util::get_piece_as_string_from_square(position, (i * 8) + j) << " ";
     }
 
     --rank;
@@ -82,54 +82,52 @@ void Util::cli_display_position(Position *position)
   std::cout << "\n\n";
 }
 
-char Util::get_piece_as_char_from_square(Position *position, int square)
+std::string Util::get_piece_as_string_from_square(Position *position, int square)
 {
   uint64_t bitboard_square = static_cast<uint64_t>(1) << square;
-  char piece;
+  std::string piece;
 
-  bool is_white;
+  bool white;
 
   if (position->white & bitboard_square)
   {
-    is_white = true;
+    white = true;
   }
   else if (position->black & bitboard_square)
   {
-    is_white = false;
+    white = false;
   }
   else
   {
-    return ' ';
+    return " ";
   }
 
   if (position->kings & bitboard_square)
   {
-    piece = 'k';
+    return white ? "♔" : "♚";
   }
   else if (position->queens & bitboard_square)
   {
-    piece = 'q';
+    return white ? "♕" : "♛";
   }
   else if (position->rooks & bitboard_square)
   {
-    piece = 'r';
+    return white ? "♖" : "♜";
   }
   else if (position->bishops & bitboard_square)
   {
-    piece = 'b';
+    return white ? "♗" : "♝";
   }
   else if (position->knights & bitboard_square)
   {
-    piece = 'n';
+    return white ? "♘" : "♞";
   }
   else if (position->pawns & bitboard_square)
   {
-    piece = 'p';
+    return white ? "♙" : "♟︎";
   }
   else
   {
-    return ' ';
+    return " ";
   }
-
-  return is_white ? toupper(piece) : piece;
 }
