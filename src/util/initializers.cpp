@@ -72,6 +72,7 @@ void Util::Initializers::update_position_from_fen_token_0(Position *position, st
           break;
         case 'b':
           position->bishops |= square;
+          break;
         case 'n':
           position->knights |= square;
           break;

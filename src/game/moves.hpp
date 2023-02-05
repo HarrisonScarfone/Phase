@@ -1,11 +1,12 @@
-// #ifndef MOVES_H
-// #define MOVES_H
+#ifndef MOVES_H
+#define MOVES_H
 
-// #include <cstdint>
+#include <cstdint>
 
-// #include "../util/global.hpp"
+#include "../util/global.hpp"
+#include "../util/magicbitboards.hpp"
 
-// uint64_t is_square_attacked(bool white, int square, Position position);
-// uint64_t get_attacked_squares(bool white, Position position);
+bool is_square_attacked(bool white, int square, Position position);
+uint64_t attacked_squares(bool white, Position position);
 
-// #endif
+#endif

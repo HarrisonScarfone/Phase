@@ -152,8 +152,8 @@ constexpr auto attack_table()
   return attack_table;
 }
 
-auto magic_bishop_attacks = attack_table<512, false>();
-auto magic_rook_attacks = attack_table<4096, true>();
+const auto magic_bishop_attacks = attack_table<512, false>();
+const auto magic_rook_attacks = attack_table<4096, true>();
 
 template <bool rooks>
 constexpr std::array<MagicBB, 64> generate_magic_struct_tables()
@@ -171,28 +171,11 @@ constexpr std::array<MagicBB, 64> generate_magic_struct_tables()
   return table;
 }
 
-auto magic_bishop_table = generate_magic_struct_tables<false>();
-auto magic_rook_table = generate_magic_struct_tables<true>();
+const auto magic_bishop_table = generate_magic_struct_tables<false>();
+const auto magic_rook_table = generate_magic_struct_tables<true>();
 
-uint64_t bishop_attacks(uint64_t occupancy, int square)
-{
-  occupancy &= magic_bishop_table[square].mask;
-  occupancy *= magic_bishop_table[square].magic;
-  occupancy >>= 64 - bishop_occupancy[square];
-  return magic_bishop_attacks[square][occupancy];
-}
-
-uint64_t rook_attacks(uint64_t occupancy, int square)
-{
-  occupancy &= magic_rook_table[square].mask;
-  occupancy *= magic_rook_table[square].magic;
-  occupancy >>= 64 - rook_occupancy[square];
-  return magic_rook_attacks[square][occupancy];
-}
-
-uint64_t queen_attacks(uint64_t occupancy, int square)
-{
-  return bishop_attacks(occupancy, square) | rook_attacks(occupancy, square);
-}
+uint64_t bishop_attacks(uint64_t occupancy, int square);
+uint64_t rook_attacks(uint64_t occupancy, int square);
+uint64_t queen_attacks(uint64_t occupancy, int square);
 
 #endif
