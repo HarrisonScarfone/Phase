@@ -4,6 +4,7 @@
 #include <iostream>
 #include <map>
 
+#include "../game/moves.hpp"
 #include "global.hpp"
 
 std::vector<std::string> Util::tokenize_string_by_whitespace(std::string input_string)
@@ -130,4 +131,17 @@ std::string Util::get_piece_as_string_from_square(Position *position, int square
   {
     return " ";
   }
+}
+
+void Util::display_encoded_move(uint32_t move)
+{
+  std::cout << std::endl << move_mask_names[0] << ": " << int_to_square_string(decode_from_square(move)) << std::endl;
+  std::cout << move_mask_names[1] << ": " << int_to_square_string(decode_to_square(move)) << std::endl;
+  std::cout << move_mask_names[2] << ": " << decode_whites_turn(move) << std::endl;
+  std::cout << move_mask_names[3] << ": " << piece_names[decode_moved_piece(move)] << std::endl;
+  std::cout << move_mask_names[4] << ": " << piece_names[decode_promoted_to_piece(move)] << std::endl;
+  std::cout << move_mask_names[5] << ": " << decode_capture(move) << std::endl;
+  std::cout << move_mask_names[6] << ": " << decode_double_push(move) << std::endl;
+  std::cout << move_mask_names[7] << ": " << decode_enpassant(move) << std::endl;
+  std::cout << move_mask_names[8] << ": " << decode_castling(move) << std::endl << std::endl;
 }

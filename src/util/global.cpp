@@ -1,5 +1,7 @@
 #include "global.hpp"
 
+#include "util.hpp"
+
 std::string square_to_string(Square sq)
 {
   int file = sq % 8;
@@ -26,4 +28,11 @@ std::string bitboard_to_string(uint64_t bitboard)
     }
   }
   return str;
+}
+
+uint64_t set_bit_high(uint64_t bitboard, int square) { return bitboard | (static_cast<uint64_t>(1) << square); }
+
+uint64_t set_bit_low(uint64_t bitboard, int square)
+{
+  return bitboard & ~(set_bit_high(static_cast<uint64_t>(0), square));
 }

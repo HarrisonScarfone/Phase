@@ -41,11 +41,11 @@ constexpr auto pawn_moves_for_bitboard(bool white, uint64_t bitboard)
 {
   if (white)
   {
-    return ((bitboard & NOT_RANK_18 & NOT_RANK_7) >> 8) | ((bitboard & RANK_2) >> 16);
+    return ((bitboard & NOT_RANK_18) >> 8) | ((bitboard & RANK_2) >> 16);
   }
   else
   {
-    return ((bitboard & NOT_RANK_18 & NOT_RANK_2) << 8) | ((bitboard & RANK_7) << 16);
+    return ((bitboard & NOT_RANK_18) << 8) | ((bitboard & RANK_7) << 16);
   }
 }
 

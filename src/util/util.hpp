@@ -15,6 +15,7 @@ std::string get_piece_as_string_from_square(Position *position, int square);
 
 void cli_display_position(Position *position);
 void print_bitboard(uint64_t bitboard);
+void display_encoded_move(uint32_t move);
 }  // namespace Util
 
 #endif
