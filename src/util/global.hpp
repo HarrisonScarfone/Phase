@@ -103,6 +103,8 @@ inline uint64_t black_bishops(Position position) { return position.black & posit
 inline uint64_t black_knights(Position position) { return position.black & position.knights; }
 inline uint64_t black_pawns(Position position) { return position.black & position.pawns; }
 inline uint64_t all_occupied(Position position) { return position.black | position.white; }
+inline uint64_t white_occupied_no_king(Position position) { return position.white & ~position.kings; }
+inline uint64_t black_occupied_no_king(Position position) { return position.black & ~position.kings; }
 
 std::string square_to_string(Square sq);
 Square string_to_square(const std::string &str);

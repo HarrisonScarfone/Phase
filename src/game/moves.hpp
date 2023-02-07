@@ -88,7 +88,14 @@ uint64_t attacked_squares(bool white, Position position);
 uint32_t encode_move(int from_square, int to_square, bool whites_turn, int moved_peice, int promoted_to_piece,
                      bool capture, bool double_push, int enpassant, int castling);
 
-std::vector<uint32_t> white_quiet_pawn_moves(Position position);
+void white_quiet_pawn_moves(Position* position, std::vector<uint32_t>* moves);
+void white_pawn_attacks(Position* position, std::vector<uint32_t>* moves);
+void black_quiet_pawn_moves(Position* position, std::vector<uint32_t>* moves);
+void white_king_moves(Position* position, std::vector<uint32_t>* moves);
+void black_king_moves(Position* position, std::vector<uint32_t>* moves);
+void bishop_moves(Position* position, std::vector<uint32_t>* moves);
+void queen_moves(Position* position, std::vector<uint32_t>* moves);
+void rook_moves(Position* position, std::vector<uint32_t>* moves);
 std::vector<uint32_t> pesudolegal_possible_moves(Position position);
 
 #endif
