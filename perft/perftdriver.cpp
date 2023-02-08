@@ -1,40 +1,3 @@
-// #include <chrono>
-// #include <iostream>
-// #include <vector>
-
-// #include "../src/game/moves.hpp"
-// #include "../src/util/initializers.hpp"
-
-// #define DOUBLE_SPACE std::cout << std::endl << std::endl;
-
-// int main(int argc, char* argv[])
-// {
-//   Position position = Util::Initializers::starting_position();
-
-//   std::vector<uint32_t> moves = valid_moves_for_position(position);
-
-//   for (uint32_t move : moves)
-//   {
-//     Position new_position = make_move(&position, move);
-//     std::vector<uint32_t> new_moves = valid_moves_for_position(new_position);
-
-//     Util::cli_display_position(&new_position);
-
-//     for (uint32_t new_move : new_moves)
-//     {
-//       Util::display_encoded_move(new_move);
-//     }
-
-//     for (uint32_t new_move : new_moves)
-//     {
-//       Position newer_position = make_move(&new_position, new_move);
-//       Util::cli_display_position(&newer_position);
-//     }
-//   }
-
-//   DOUBLE_SPACE;
-// }
-
 #include <chrono>
 #include <iostream>
 
@@ -103,8 +66,6 @@ uint64_t perft(Position position, int depth, DetailedPerftResults* detailed_perf
 
     if (decode_capture(move))
     {
-      Util::cli_display_position(&position);
-      Util::cli_display_position(&new_position);
       Util::display_encoded_move(move);
     }
   }

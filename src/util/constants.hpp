@@ -40,8 +40,22 @@ constexpr uint64_t FILE_GH = FILE_G | FILE_H;
 constexpr uint64_t NOT_FILE_GH = ~FILE_GH;
 constexpr uint64_t NOT_FILE_AH = NOT_FILE_A & NOT_FILE_H;
 
+// Castling Constants
+constexpr uint64_t WHITE_KINGSIDE_CASTLE_MASK = (3ull << 61);
+constexpr uint64_t WHITE_QUEENSIDE_CASTLE_MASK = (7ull << 57);
+constexpr uint64_t BLACK_KINGSIDE_CASTLE_MASK = (3ull << 5);
+constexpr uint64_t BLACK_QUEENSIDE_CASTLE_MASK = (7ull << 1);
+
 // Rank and file hybrid
 constexpr uint64_t NOT_RANK_18_FILE_AH = NOT_RANK_18 & NOT_FILE_AH;
+
+// Bottom 64 bit unsigned number masks
+constexpr uint64_t BOTTOM_6_BITS = 63ull;
+constexpr uint64_t BOTTOM_5_BITS = 31ull;
+constexpr uint64_t BOTTOM_4_BITS = 15ull;
+constexpr uint64_t BOTTOM_3_BITS = 7ull;
+constexpr uint64_t BOTTOM_2_BITS = 3ull;
+constexpr uint64_t BOTTOM_1_BITS = 1ull;
 
 // Rank and file constnats as Array for slider move generation (need to be iterable)
 // Create 16 masks, top to bottom, left to right;

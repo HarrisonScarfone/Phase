@@ -76,8 +76,11 @@ constexpr std::array<uint32_t, 9> move_masks = {
 inline int decode_from_square(uint32_t move) { return static_cast<int>(move & move_masks[0]); }
 inline int decode_to_square(uint32_t move) { return static_cast<int>((move & move_masks[1]) >> 6); }
 inline bool decode_whites_turn(uint32_t move) { return move & move_masks[2]; }
-inline int decode_moved_piece(uint32_t move) { return static_cast<int>((move & move_masks[3]) >> 13); }
-inline int decode_promoted_to_piece(uint32_t move) { return static_cast<int>((move & move_masks[4]) >> 16); }
+inline PieceAsInt decode_moved_piece(uint32_t move) { return static_cast<PieceAsInt>((move & move_masks[3]) >> 13); }
+inline PieceAsInt decode_promoted_to_piece(uint32_t move)
+{
+  return static_cast<PieceAsInt>((move & move_masks[4]) >> 16);
+}
 inline bool decode_capture(uint32_t move) { return move & move_masks[5]; }
 inline bool decode_double_push(uint32_t move) { return move & move_masks[6]; }
 inline bool decode_enpassant(uint32_t move) { return move & move_masks[7]; }
@@ -91,11 +94,19 @@ uint32_t encode_move(int from_square, int to_square, bool whites_turn, int moved
 void white_quiet_pawn_moves(Position* position, std::vector<uint32_t>* moves);
 void white_pawn_attacks(Position* position, std::vector<uint32_t>* moves);
 void black_quiet_pawn_moves(Position* position, std::vector<uint32_t>* moves);
+void black_pawn_attacks(Position* position, std::vector<uint32_t>* moves);
+void white_knight_moves(Position* position, std::vector<uint32_t>* moves);
+void black_knight_moves(Position* position, std::vector<uint32_t>* moves);
 void white_king_moves(Position* position, std::vector<uint32_t>* moves);
 void black_king_moves(Position* position, std::vector<uint32_t>* moves);
 void bishop_moves(Position* position, std::vector<uint32_t>* moves);
 void queen_moves(Position* position, std::vector<uint32_t>* moves);
 void rook_moves(Position* position, std::vector<uint32_t>* moves);
-std::vector<uint32_t> pesudolegal_possible_moves(Position position);
+void castling_moves(Position* position, std::vector<uint32_t>* moves);
+std::vector<uint32_t> pseudolegal_possible_moves(Position* position);
+bool validate_move(Position* position, uint32_t move);
+std::vector<uint32_t> valid_moves_for_position(Position position);
+
+Position make_move(Position* position, uint32_t move);
 
 #endif
