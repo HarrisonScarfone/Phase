@@ -54,7 +54,8 @@ struct DetailedPerftResults
 
 void display_perft_results(auto duration, int depth, uint64_t total_nodes, DetailedPerftResults detailed_perft_results)
 {
-  std::cout << "Perft of depth : " << depth << " took: " << duration.count() << " ns." << std::endl;
+  std::cout << "Perft of depth : " << depth << " took: " << duration.count() * (0.000000001) << " seconds."
+            << std::endl;
   std::cout << "Found " << total_nodes << " total nodes." << std::endl << std::endl;
 
   if (total_nodes > 0)
@@ -100,13 +101,6 @@ uint64_t perft(Position position, int depth, DetailedPerftResults* detailed_perf
     detailed_perft_results->double_pushes += decode_double_push(move);
 
     nodes += perft(new_position, depth - 1, detailed_perft_results);
-
-    if (decode_capture(move))
-    {
-      Util::cli_display_position(&position);
-      Util::cli_display_position(&new_position);
-      Util::display_encoded_move(move);
-    }
   }
 
   return nodes;
@@ -115,9 +109,14 @@ uint64_t perft(Position position, int depth, DetailedPerftResults* detailed_perf
 int main(int argc, char* argv[])
 {
   Position position = Util::Initializers::starting_position();
+  // std::string fen = "4k3/8/8/4N3/2q5/8/8/4K3 w KQkq - 0 1";
+  // Position position = Util::Initializers::fen_string_to_position(fen);
+
+  Util::cli_display_position(&position);
 
   int move_count = 0;
-  int depth = 2;
+
+  int depth = 6;
 
   DetailedPerftResults detailed_perft_results;
 

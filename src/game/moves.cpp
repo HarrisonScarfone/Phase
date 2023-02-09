@@ -137,12 +137,12 @@ bool is_square_attacked(bool white, int square, Position* position)
 {
   return (white && (pawn_attacks[0][square] & white_pawns(position))) ||
          (!white && (pawn_attacks[1][square] & black_pawns(position))) ||
-         (knight_moves[square] & (white ? white_knights(position) : black_knights(position))) ||
+         (knight_moves[square] & (white ? black_knights(position) : white_knights(position))) ||
          (bishop_attacks(all_occupied(position), square) &
-          (white ? white_bishops(position) : black_bishops(position))) ||
-         (rook_attacks(all_occupied(position), square) & (white ? white_rooks(position) : black_rooks(position))) ||
-         (queen_attacks(all_occupied(position), square) & (white ? white_queens(position) : black_queens(position))) ||
-         (king_moves[square] & (white ? white_kings(position) : black_kings(position)));
+          (white ? black_bishops(position) : white_bishops(position))) ||
+         (rook_attacks(all_occupied(position), square) & (white ? black_rooks(position) : white_rooks(position))) ||
+         (queen_attacks(all_occupied(position), square) & (white ? black_queens(position) : white_queens(position))) ||
+         (king_moves[square] & (white ? black_kings(position) : white_kings(position)));
 }
 
 uint64_t attacked_squares(bool white, Position position)
@@ -195,8 +195,9 @@ std::vector<uint32_t> pseudolegal_possible_moves(Position* position)
 bool validate_move(Position* position, uint32_t move)
 {
   Position intermediate_position = make_move(position, move);
-  int king_position = bitboard_to_square(position->white_to_move ? white_kings(position) : black_kings(position));
-  return is_square_attacked(position->white_to_move, king_position, position);
+  int king_position =
+      bitscan(position->white_to_move ? white_kings(&intermediate_position) : black_kings(&intermediate_position));
+  return !is_square_attacked(position->white_to_move, king_position, &intermediate_position);
 }
 
 std::vector<uint32_t> valid_moves_for_position(Position position)
@@ -289,7 +290,7 @@ void black_quiet_pawn_moves(Position* position, std::vector<uint32_t>* moves)
         moves->push_back(
             encode_move(pawn_location, potential_location, false, PAWN, NO_PIECE, false, false, false, false));
 
-        if (potential_location > 15 && potential_location < 23)
+        if (potential_location > 15 && potential_location < 24)
         {
           potential_location += 8;
           if (not_occupied_squares & int_location_to_bitboard(potential_location))
@@ -317,10 +318,11 @@ void white_pawn_attacks(Position* position, std::vector<uint32_t>* moves)
     white_pawn_location = bitscan(white_pawn_locations);
     white_pawn_attack_location = white_pawn_location - 7;
 
-    if (white_pawn_attack_location > 0)
+    if (white_pawn_attack_location > -1)
     {
       potential_white_pawn_attack_bitboard = int_location_to_bitboard(white_pawn_attack_location);
-      if (black_no_king & potential_white_pawn_attack_bitboard)
+
+      if ((black_no_king & potential_white_pawn_attack_bitboard) && (white_pawn_attack_location % 8 != 0))
       {
         moves->push_back(encode_move(white_pawn_location, white_pawn_attack_location, true, PAWN, NO_PIECE, true, false,
                                      false, false));
@@ -328,7 +330,8 @@ void white_pawn_attacks(Position* position, std::vector<uint32_t>* moves)
 
       white_pawn_attack_location -= 2;
       potential_white_pawn_attack_bitboard = int_location_to_bitboard(white_pawn_attack_location);
-      if (white_pawn_attack_location > 0 && (black_no_king & potential_white_pawn_attack_bitboard))
+      if (white_pawn_attack_location > 0 &&
+          ((black_no_king & potential_white_pawn_attack_bitboard) && (white_pawn_attack_location % 8 != 7)))
       {
         moves->push_back(encode_move(white_pawn_location, white_pawn_attack_location, true, PAWN, NO_PIECE, true, false,
                                      false, false));
@@ -349,20 +352,21 @@ void black_pawn_attacks(Position* position, std::vector<uint32_t>* moves)
   while (black_pawn_locations)
   {
     black_pawn_location = bitscan(black_pawn_locations);
-    black_pawn_attack_location = black_pawn_location - 7;
+    black_pawn_attack_location = black_pawn_location + 7;
 
-    if (black_pawn_attack_location > 0)
+    if (black_pawn_attack_location < 64)
     {
       potential_black_pawn_attack_bitboard = int_location_to_bitboard(black_pawn_attack_location);
-      if (white_no_king & potential_black_pawn_attack_bitboard)
+      if ((white_no_king & potential_black_pawn_attack_bitboard) && (black_pawn_attack_location % 8 != 7))
       {
         moves->push_back(encode_move(black_pawn_location, black_pawn_attack_location, true, PAWN, NO_PIECE, true, false,
                                      false, false));
       }
 
-      black_pawn_attack_location -= 2;
+      black_pawn_attack_location += 2;
       potential_black_pawn_attack_bitboard = int_location_to_bitboard(black_pawn_attack_location);
-      if (black_pawn_attack_location > 0 && (white_no_king & potential_black_pawn_attack_bitboard))
+      if (black_pawn_attack_location < 64 &&
+          ((white_no_king & potential_black_pawn_attack_bitboard) && (black_pawn_attack_location % 8 != 7)))
       {
         moves->push_back(encode_move(black_pawn_location, black_pawn_attack_location, true, PAWN, NO_PIECE, true, false,
                                      false, false));
@@ -436,7 +440,7 @@ void white_knight_moves(Position* position, std::vector<uint32_t>* moves)
       to_square_candidates = set_bit_low(to_square_candidates, to_square);
     }
 
-    to_square_candidates = king_moves[knight_location] & black_occupied_no_king(position);
+    to_square_candidates = knight_moves[knight_location] & black_occupied_no_king(position);
 
     while (to_square_candidates)
     {
@@ -451,24 +455,31 @@ void white_knight_moves(Position* position, std::vector<uint32_t>* moves)
 
 void black_knight_moves(Position* position, std::vector<uint32_t>* moves)
 {
-  int knight_location = bitscan(black_knights(position));
-  uint64_t to_square_candidates = knight_moves[knight_location] & (~all_occupied(position));
-  int to_square;
+  uint64_t black_knights_in_position = black_knights(position);
 
-  while (to_square_candidates)
+  while (black_knights_in_position)
   {
-    to_square = bitscan(to_square_candidates);
-    moves->push_back(encode_move(knight_location, to_square, false, KNIGHT, NO_PIECE, false, false, false, false));
-    to_square_candidates = set_bit_low(to_square_candidates, to_square);
-  }
+    int knight_location = bitscan(black_knights_in_position);
+    uint64_t to_square_candidates = knight_moves[knight_location] & (~all_occupied(position));
+    int to_square;
 
-  to_square_candidates = king_moves[knight_location] & white_occupied_no_king(position);
+    while (to_square_candidates)
+    {
+      to_square = bitscan(to_square_candidates);
+      moves->push_back(encode_move(knight_location, to_square, false, KNIGHT, NO_PIECE, false, false, false, false));
+      to_square_candidates = set_bit_low(to_square_candidates, to_square);
+    }
 
-  while (to_square_candidates)
-  {
-    to_square = bitscan(to_square_candidates);
-    moves->push_back(encode_move(knight_location, to_square, false, KNIGHT, NO_PIECE, true, false, false, false));
-    to_square_candidates = set_bit_low(to_square_candidates, to_square);
+    to_square_candidates = knight_moves[knight_location] & white_occupied_no_king(position);
+
+    while (to_square_candidates)
+    {
+      to_square = bitscan(to_square_candidates);
+      moves->push_back(encode_move(knight_location, to_square, false, KNIGHT, NO_PIECE, true, false, false, false));
+      to_square_candidates = set_bit_low(to_square_candidates, to_square);
+    }
+
+    black_knights_in_position = set_bit_low(black_knights_in_position, knight_location);
   }
 }
 
@@ -587,7 +598,7 @@ void castling_moves(Position* position, std::vector<uint32_t>* moves)
     if (position->white_can_castle_kingside && !is_square_attacked(position->white_to_move, e1, position) &&
         !is_square_attacked(position->white_to_move, f1, position) &&
         !is_square_attacked(position->white_to_move, g1, position) &&
-        ~(all_occupied(position) & WHITE_KINGSIDE_CASTLE_MASK))
+        (all_occupied(position) & WHITE_KINGSIDE_CASTLE_MASK) == 0)
     {
       moves->push_back(encode_move(e1, g1, true, KING, NO_PIECE, false, false, false, true));
     }
@@ -595,7 +606,7 @@ void castling_moves(Position* position, std::vector<uint32_t>* moves)
         !is_square_attacked(position->white, c1, position) &&
         !is_square_attacked(position->white_to_move, d1, position) &&
         !is_square_attacked(position->white_to_move, e1, position) &&
-        ~(all_occupied(position) & WHITE_QUEENSIDE_CASTLE_MASK))
+        (all_occupied(position) & WHITE_QUEENSIDE_CASTLE_MASK) == 0)
     {
       moves->push_back(encode_move(e1, c1, true, KING, NO_PIECE, false, false, false, true));
     }
@@ -605,7 +616,7 @@ void castling_moves(Position* position, std::vector<uint32_t>* moves)
     if (position->black_can_castle_queenside && !is_square_attacked(position->white_to_move, e8, position) &&
         !is_square_attacked(position->white_to_move, f8, position) &&
         !is_square_attacked(position->white_to_move, g8, position) &&
-        ~(all_occupied(position) & WHITE_KINGSIDE_CASTLE_MASK))
+        (all_occupied(position) & WHITE_KINGSIDE_CASTLE_MASK) == 0)
     {
       moves->push_back(encode_move(e1, g1, false, KING, NO_PIECE, false, false, false, true));
     }
@@ -613,7 +624,7 @@ void castling_moves(Position* position, std::vector<uint32_t>* moves)
         !is_square_attacked(position->white, c8, position) &&
         !is_square_attacked(position->white_to_move, d8, position) &&
         !is_square_attacked(position->white_to_move, e8, position) &&
-        ~(all_occupied(position) & BLACK_QUEENSIDE_CASTLE_MASK))
+        (all_occupied(position) & BLACK_QUEENSIDE_CASTLE_MASK) == 0)
     {
       moves->push_back(encode_move(e1, c1, false, KING, NO_PIECE, false, false, false, true));
     }

@@ -101,7 +101,7 @@ inline uint64_t black_queens(Position* position) { return position->black & posi
 inline uint64_t black_rooks(Position* position) { return position->black & position->rooks; }
 inline uint64_t black_bishops(Position* position) { return position->black & position->bishops; }
 inline uint64_t black_knights(Position* position) { return position->black & position->knights; }
-inline uint64_t black_pawns(Position* position) { return position->black | position->white; }
+inline uint64_t black_pawns(Position* position) { return position->black & position->pawns; }
 inline uint64_t white_occupied_no_king(Position* position) { return position->white & ~position->kings; }
 inline uint64_t black_occupied_no_king(Position* position) { return position->black & ~position->kings; }
 inline uint64_t all_occupied(Position* position) { return position->black | position->white; }
