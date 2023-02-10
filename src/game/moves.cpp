@@ -20,6 +20,7 @@ Position make_move(Position* position, uint32_t move)
   if (position->white_to_move)
   {
     new_position.white ^= from_square | to_square;
+    new_position.black &= ~to_square;
     if (double_push)
     {
       new_position.enPassantTarget |= to_square << 8;
@@ -28,6 +29,7 @@ Position make_move(Position* position, uint32_t move)
   else
   {
     new_position.black ^= from_square | to_square;
+    new_position.white &= ~to_square;
     if (double_push)
     {
       new_position.enPassantTarget |= to_square >> 8;
@@ -36,11 +38,11 @@ Position make_move(Position* position, uint32_t move)
 
   if (capture)
   {
-    new_position.bishops ^= to_square;
-    new_position.rooks ^= to_square;
-    new_position.pawns ^= to_square;
-    new_position.queens ^= to_square;
-    new_position.knights ^= to_square;
+    new_position.bishops &= ~to_square;
+    new_position.rooks &= ~to_square;
+    new_position.pawns &= ~to_square;
+    new_position.queens &= ~to_square;
+    new_position.knights &= ~to_square;
 
     if (enpassant)
     {
@@ -126,8 +128,6 @@ Position make_move(Position* position, uint32_t move)
         }
       }
       break;
-    default:
-      throw std::invalid_argument("Should never see this");
   }
 
   return new_position;
@@ -135,8 +135,8 @@ Position make_move(Position* position, uint32_t move)
 
 bool is_square_attacked(bool white, int square, Position* position)
 {
-  return (white && (pawn_attacks[0][square] & white_pawns(position))) ||
-         (!white && (pawn_attacks[1][square] & black_pawns(position))) ||
+  return (white && (pawn_attacks[1][square] & black_pawns(position))) ||
+         (!white && (pawn_attacks[0][square] & white_pawns(position))) ||
          (knight_moves[square] & (white ? black_knights(position) : white_knights(position))) ||
          (bishop_attacks(all_occupied(position), square) &
           (white ? black_bishops(position) : white_bishops(position))) ||
@@ -197,7 +197,17 @@ bool validate_move(Position* position, uint32_t move)
   Position intermediate_position = make_move(position, move);
   int king_position =
       bitscan(position->white_to_move ? white_kings(&intermediate_position) : black_kings(&intermediate_position));
-  return !is_square_attacked(position->white_to_move, king_position, &intermediate_position);
+
+  bool square_is_safe = !is_square_attacked(position->white_to_move, king_position, &intermediate_position);
+
+  if (decode_capture(move))
+  {
+    Util::cli_display_position(position);
+    Util::display_encoded_move(move);
+    Util::cli_display_position(&intermediate_position);
+  }
+
+  return square_is_safe;
 }
 
 std::vector<uint32_t> valid_moves_for_position(Position position)
@@ -320,21 +330,23 @@ void white_pawn_attacks(Position* position, std::vector<uint32_t>* moves)
 
     if (white_pawn_attack_location > -1)
     {
-      potential_white_pawn_attack_bitboard = int_location_to_bitboard(white_pawn_attack_location);
+      potential_white_pawn_attack_bitboard =
+          int_location_to_bitboard(white_pawn_attack_location) | position->enPassantTarget;
 
       if ((black_no_king & potential_white_pawn_attack_bitboard) && (white_pawn_attack_location % 8 != 0))
       {
         moves->push_back(encode_move(white_pawn_location, white_pawn_attack_location, true, PAWN, NO_PIECE, true, false,
-                                     false, false));
+                                     position->enPassantTarget, false));
       }
 
       white_pawn_attack_location -= 2;
-      potential_white_pawn_attack_bitboard = int_location_to_bitboard(white_pawn_attack_location);
+      potential_white_pawn_attack_bitboard =
+          int_location_to_bitboard(white_pawn_attack_location) | position->enPassantTarget;
       if (white_pawn_attack_location > 0 &&
           ((black_no_king & potential_white_pawn_attack_bitboard) && (white_pawn_attack_location % 8 != 7)))
       {
         moves->push_back(encode_move(white_pawn_location, white_pawn_attack_location, true, PAWN, NO_PIECE, true, false,
-                                     false, false));
+                                     position->enPassantTarget, false));
       }
     }
 
@@ -356,20 +368,22 @@ void black_pawn_attacks(Position* position, std::vector<uint32_t>* moves)
 
     if (black_pawn_attack_location < 64)
     {
-      potential_black_pawn_attack_bitboard = int_location_to_bitboard(black_pawn_attack_location);
+      potential_black_pawn_attack_bitboard =
+          int_location_to_bitboard(black_pawn_attack_location) | position->enPassantTarget;
       if ((white_no_king & potential_black_pawn_attack_bitboard) && (black_pawn_attack_location % 8 != 7))
       {
         moves->push_back(encode_move(black_pawn_location, black_pawn_attack_location, true, PAWN, NO_PIECE, true, false,
-                                     false, false));
+                                     position->enPassantTarget, false));
       }
 
       black_pawn_attack_location += 2;
-      potential_black_pawn_attack_bitboard = int_location_to_bitboard(black_pawn_attack_location);
+      potential_black_pawn_attack_bitboard =
+          int_location_to_bitboard(black_pawn_attack_location) | position->enPassantTarget;
       if (black_pawn_attack_location < 64 &&
           ((white_no_king & potential_black_pawn_attack_bitboard) && (black_pawn_attack_location % 8 != 7)))
       {
         moves->push_back(encode_move(black_pawn_location, black_pawn_attack_location, true, PAWN, NO_PIECE, true, false,
-                                     false, false));
+                                     position->enPassantTarget, false));
       }
     }
 

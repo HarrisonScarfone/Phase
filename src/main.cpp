@@ -108,15 +108,15 @@ uint64_t perft(Position position, int depth, DetailedPerftResults* detailed_perf
 
 int main(int argc, char* argv[])
 {
-  Position position = Util::Initializers::starting_position();
-  // std::string fen = "4k3/8/8/4N3/2q5/8/8/4K3 w KQkq - 0 1";
-  // Position position = Util::Initializers::fen_string_to_position(fen);
+  // Position position = Util::Initializers::starting_position();
+  std::string fen = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1";
+  Position position = Util::Initializers::fen_string_to_position(fen);
 
   Util::cli_display_position(&position);
 
   int move_count = 0;
 
-  int depth = 6;
+  int depth = 3;
 
   DetailedPerftResults detailed_perft_results;
 
