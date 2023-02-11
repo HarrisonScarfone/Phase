@@ -24,6 +24,9 @@ Position make_move(Position* position, uint32_t move)
     if (double_push)
     {
       new_position.enPassantTarget |= to_square << 8;
+      Util::display_encoded_move(move);
+      Util::print_bitboard(new_position.enPassantTarget);
+      Util::cli_display_position(&new_position);
     }
   }
   else
@@ -197,17 +200,26 @@ bool validate_move(Position* position, uint32_t move)
   Position intermediate_position = make_move(position, move);
   int king_position =
       bitscan(position->white_to_move ? white_kings(&intermediate_position) : black_kings(&intermediate_position));
-
   bool square_is_safe = !is_square_attacked(position->white_to_move, king_position, &intermediate_position);
 
-  if (decode_capture(move))
-  {
-    Util::cli_display_position(position);
-    Util::display_encoded_move(move);
-    Util::cli_display_position(&intermediate_position);
-  }
+  // if (decode_capture(move) && square_is_safe)
+  // {
+  //   Util::cli_display_position(position);
+  //   Util::display_encoded_move(move);
+  //   Util::cli_display_position(&intermediate_position);
+  // }
 
   return square_is_safe;
+}
+
+bool is_a_check(Position* position, uint32_t move)
+{
+  Position intermediate_position = make_move(position, move);
+  int king_position =
+      bitscan(position->white_to_move ? black_kings(&intermediate_position) : white_kings(&intermediate_position));
+  bool is_check = is_square_attacked(intermediate_position.white_to_move, king_position, &intermediate_position);
+
+  return is_check;
 }
 
 std::vector<uint32_t> valid_moves_for_position(Position position)
@@ -219,11 +231,18 @@ std::vector<uint32_t> valid_moves_for_position(Position position)
   {
     if (validate_move(&position, move))
     {
-      legal_moves.push_back(move);
+      if (is_a_check(&position, move))
+      {
+        legal_moves.push_back(move | move_masks[9]);
+      }
+      else
+      {
+        legal_moves.push_back(move);
+      }
     }
   }
 
-  // needs a special validiaty check so handle it in the generation
+  // needs a special validity check so handle it in the generation
   castling_moves(&position, &legal_moves);
 
   return legal_moves;
@@ -322,6 +341,7 @@ void white_pawn_attacks(Position* position, std::vector<uint32_t>* moves)
   uint64_t white_pawn_locations = white_pawns(position);
   uint64_t black_no_king = black_occupied_no_king(position);
   uint64_t potential_white_pawn_attack_bitboard;
+  uint64_t targets = black_no_king | position->enPassantTarget;
 
   while (white_pawn_locations)
   {
@@ -330,23 +350,21 @@ void white_pawn_attacks(Position* position, std::vector<uint32_t>* moves)
 
     if (white_pawn_attack_location > -1)
     {
-      potential_white_pawn_attack_bitboard =
-          int_location_to_bitboard(white_pawn_attack_location) | position->enPassantTarget;
+      potential_white_pawn_attack_bitboard = int_location_to_bitboard(white_pawn_attack_location);
 
-      if ((black_no_king & potential_white_pawn_attack_bitboard) && (white_pawn_attack_location % 8 != 0))
+      if ((targets & potential_white_pawn_attack_bitboard) && (white_pawn_location % 8 != 7))
       {
         moves->push_back(encode_move(white_pawn_location, white_pawn_attack_location, true, PAWN, NO_PIECE, true, false,
-                                     position->enPassantTarget, false));
+                                     position->enPassantTarget > 0, false));
       }
 
       white_pawn_attack_location -= 2;
-      potential_white_pawn_attack_bitboard =
-          int_location_to_bitboard(white_pawn_attack_location) | position->enPassantTarget;
-      if (white_pawn_attack_location > 0 &&
-          ((black_no_king & potential_white_pawn_attack_bitboard) && (white_pawn_attack_location % 8 != 7)))
+      potential_white_pawn_attack_bitboard = int_location_to_bitboard(white_pawn_location);
+      if (white_pawn_attack_location > 0 && (white_pawn_attack_location % 8 != 0) &&
+          (targets & potential_white_pawn_attack_bitboard))
       {
         moves->push_back(encode_move(white_pawn_location, white_pawn_attack_location, true, PAWN, NO_PIECE, true, false,
-                                     position->enPassantTarget, false));
+                                     position->enPassantTarget > 0, false));
       }
     }
 
@@ -360,6 +378,7 @@ void black_pawn_attacks(Position* position, std::vector<uint32_t>* moves)
   uint64_t black_pawn_locations = black_pawns(position);
   uint64_t white_no_king = white_occupied_no_king(position);
   uint64_t potential_black_pawn_attack_bitboard;
+  uint64_t targets = white_no_king | position->enPassantTarget;
 
   while (black_pawn_locations)
   {
@@ -368,22 +387,20 @@ void black_pawn_attacks(Position* position, std::vector<uint32_t>* moves)
 
     if (black_pawn_attack_location < 64)
     {
-      potential_black_pawn_attack_bitboard =
-          int_location_to_bitboard(black_pawn_attack_location) | position->enPassantTarget;
-      if ((white_no_king & potential_black_pawn_attack_bitboard) && (black_pawn_attack_location % 8 != 7))
+      potential_black_pawn_attack_bitboard = int_location_to_bitboard(black_pawn_attack_location);
+      if ((targets & potential_black_pawn_attack_bitboard) && (black_pawn_location % 8 != 0))
       {
         moves->push_back(encode_move(black_pawn_location, black_pawn_attack_location, true, PAWN, NO_PIECE, true, false,
-                                     position->enPassantTarget, false));
+                                     position->enPassantTarget > 0, false));
       }
 
       black_pawn_attack_location += 2;
-      potential_black_pawn_attack_bitboard =
-          int_location_to_bitboard(black_pawn_attack_location) | position->enPassantTarget;
-      if (black_pawn_attack_location < 64 &&
-          ((white_no_king & potential_black_pawn_attack_bitboard) && (black_pawn_attack_location % 8 != 7)))
+      potential_black_pawn_attack_bitboard = int_location_to_bitboard(black_pawn_attack_location);
+      if (black_pawn_attack_location < 64 && (targets & potential_black_pawn_attack_bitboard) &&
+          (black_pawn_location % 8 != 7))
       {
         moves->push_back(encode_move(black_pawn_location, black_pawn_attack_location, true, PAWN, NO_PIECE, true, false,
-                                     position->enPassantTarget, false));
+                                     position->enPassantTarget > 0, false));
       }
     }
 

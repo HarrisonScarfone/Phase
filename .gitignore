@@ -10,6 +10,9 @@ _deps
 # Other
 notes.txt
 
+# Might as well bring a copy of stockfish
+stockfish
+
 # Build Ignore
 build
 

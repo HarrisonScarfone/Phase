@@ -56,12 +56,6 @@ uint64_t perft(Position position, int depth, DetailedPerftResults* detailed_perf
   {
     new_position = make_move(&position, move);
 
-    detailed_perft_results->captures += decode_capture(move);
-    detailed_perft_results->enpassants += decode_enpassant(move);
-    detailed_perft_results->castles += decode_castling(move);
-    detailed_perft_results->promotions += decode_promoted_to_piece(move) == NO_PIECE ? 0 : 1;
-    detailed_perft_results->double_pushes += decode_double_push(move);
-
     nodes += perft(new_position, depth - 1, detailed_perft_results);
 
     if (decode_capture(move))

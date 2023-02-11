@@ -23,7 +23,7 @@ using a uinsigned 32 bit number
 0000 0000 0001 0000 0000 0000 0000 0000   |   double push
 0000 0000 0010 0000 0000 0000 0000 0000   |   enpassant
 0000 0000 0100 0000 0000 0000 0000 0000   |   castling
-
+0100 0000 0000 0000 0000 0000 0000 0000   |   check (added in move validation)
 */
 
 #define DONT_CARE 0
@@ -61,7 +61,7 @@ constexpr std::array<std::string_view, 7> piece_names = {
     "KNIGHT", "BISHOP", "ROOK", "QUEEN", "PAWN", "KING", "NO_PIECE",
 };
 
-constexpr std::array<uint32_t, 9> move_masks = {
+constexpr std::array<uint32_t, 10> move_masks = {
     0x0000003F,  // from square
     0x00000FC0,  // to square
     0x00001000,  // whites turn
@@ -71,6 +71,7 @@ constexpr std::array<uint32_t, 9> move_masks = {
     0x00100000,  // double push
     0x00200000,  // enpassant
     0x00400000,  // castling
+    0x40000000,  // check
 };
 
 inline int decode_from_square(uint32_t move) { return static_cast<int>(move & move_masks[0]); }
@@ -85,6 +86,7 @@ inline bool decode_capture(uint32_t move) { return move & move_masks[5]; }
 inline bool decode_double_push(uint32_t move) { return move & move_masks[6]; }
 inline bool decode_enpassant(uint32_t move) { return move & move_masks[7]; }
 inline bool decode_castling(uint32_t move) { return move & move_masks[8]; }
+inline bool decode_check(uint32_t move) { return move & move_masks[9]; }
 
 bool is_square_attacked(bool white, int square, Position* position);
 uint64_t attacked_squares(bool white, Position position);

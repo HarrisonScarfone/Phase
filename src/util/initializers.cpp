@@ -118,19 +118,13 @@ void Util::Initializers::update_position_from_fen_token_2(Position *position, st
 
 void Util::Initializers::update_position_from_fen_token_3(Position *position, std::string token)
 {
-  std::string::iterator element;
-
-  for (element = token.begin(); element != token.end(); element++)
+  if (token == "-")
   {
-    if (*element == '-')
-    {
-      position->enPassantTarget = 0;
-    }
-    else
-    {
-      // position->enPassantTarget =
-      // Util::Lookup::coordinate_to_uint64_t(token);
-    }
+    position->enPassantTarget = 0;
+  }
+  else
+  {
+    position->enPassantTarget = int_location_to_bitboard(string_to_int(token));
   }
 }
 

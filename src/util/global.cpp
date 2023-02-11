@@ -9,25 +9,24 @@ std::string square_to_string(Square sq)
   return (char)('a' + file) + std::to_string(rank + 1);
 }
 
-Square string_to_square(const std::string &str)
+int string_to_int(std::string str)
 {
   int file = str[0] - 'a';
-  int rank = str[1] - '1';
-  return static_cast<Square>(rank * 8 + file);
+  int rank = str[1] - '1' + 1;
+  return (8 - rank) * 8 + file;
 }
 
 std::string bitboard_to_string(uint64_t bitboard)
 {
   std::string str;
-  for (int i = 0; i < 64; i++)
+  int count = -1;
+  while (bitboard)
   {
-    if ((bitboard >> i) & 1)
-    {
-      str += square_to_string(static_cast<Square>(i));
-      str += " ";
-    }
+    bitboard >>= 1;
+    count++;
   }
-  return str;
+
+  return static_cast<std::string>(square_names[count]);
 }
 
 uint64_t set_bit_high(uint64_t bitboard, int square) { return bitboard | (static_cast<uint64_t>(1) << square); }

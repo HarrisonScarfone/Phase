@@ -107,7 +107,7 @@ inline uint64_t black_occupied_no_king(Position* position) { return position->bl
 inline uint64_t all_occupied(Position* position) { return position->black | position->white; }
 
 std::string square_to_string(Square sq);
-Square string_to_square(const std::string& str);
+int string_to_int(std::string str);
 std::string bitboard_to_string(uint64_t bitboard);
 
 #endif
