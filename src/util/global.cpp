@@ -18,6 +18,10 @@ int string_to_int(std::string str)
 
 std::string bitboard_to_string(uint64_t bitboard)
 {
+  if (bitboard == 0)
+  {
+    return "-";
+  }
   std::string str;
   int count = -1;
   while (bitboard)

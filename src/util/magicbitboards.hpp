@@ -29,11 +29,11 @@ constexpr auto pawn_attacks_for_bitboard(bool white, uint64_t bitboard)
 {
   if (white)
   {
-    return ((bitboard & NOT_FILE_H & NOT_RANK_18) >> 7) | ((bitboard & NOT_FILE_A & NOT_RANK_18) >> 9);
+    return ((bitboard & NOT_FILE_H & NOT_RANK_8) >> 7) | ((bitboard & NOT_FILE_A & NOT_RANK_8) >> 9);
   }
   else
   {
-    return ((bitboard & NOT_FILE_A & NOT_RANK_18) << 7) | ((bitboard & NOT_FILE_H & NOT_RANK_18) << 9);
+    return ((bitboard & NOT_FILE_A & NOT_RANK_1) << 7) | ((bitboard & NOT_FILE_H & NOT_RANK_1) << 9);
   }
 }
 

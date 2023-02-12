@@ -118,7 +118,7 @@ void Util::Initializers::update_position_from_fen_token_2(Position *position, st
 
 void Util::Initializers::update_position_from_fen_token_3(Position *position, std::string token)
 {
-  if (token == "-")
+  if (token.size() == 1)
   {
     position->enPassantTarget = 0;
   }

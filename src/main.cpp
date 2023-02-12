@@ -43,7 +43,7 @@
 
 #define DOUBLE_SPACE std::cout << std::endl << std::endl;
 
-#define PERFT_DEPTH 2
+#define PERFT_DEPTH 7
 
 struct DetailedPerftResults
 {
@@ -68,13 +68,15 @@ void display_perft_results(auto duration, int depth, uint64_t total_nodes, Detai
     std::cout << "Generating and classifying at " << 1.0 / ((duration.count() / total_nodes) * (0.000000001))
               << " valid moves/second." << std::endl;
     DOUBLE_SPACE
+    std::cout << "Cumulative statistics" << std::endl;
+    std::cout << "--------------------------------------" << std::endl;
     std::cout << "Captures: " << detailed_perft_results.captures << std::endl;
     std::cout << "Enpassants: " << detailed_perft_results.enpassants << std::endl;
     std::cout << "Castles: " << detailed_perft_results.castles << std::endl;
     std::cout << "Promotions: " << detailed_perft_results.promotions << std::endl;
     std::cout << "Double pushes: " << detailed_perft_results.double_pushes << std::endl;
     std::cout << "Checks: " << detailed_perft_results.checks << std::endl;
-    std::cout << "Checkmates: " << detailed_perft_results.checkmates << std::endl << std::endl;
+    std::cout << "Checkmates (from previous position): " << detailed_perft_results.checkmates << std::endl << std::endl;
   }
   else
   {
@@ -112,14 +114,8 @@ uint64_t perft(Position position, int depth, DetailedPerftResults* detailed_perf
     detailed_perft_results->double_pushes += decode_double_push(move);
     detailed_perft_results->checks += decode_check(move);
 
-    // if (decode_capture(move))
-    // {
-    //   Util::cli_display_position(&position);
-    //   Util::display_encoded_move(move);
-    //   Util::cli_display_position(&new_position);
-    // }
-
     uint64_t nodes_for_move = perft(new_position, depth - 1, detailed_perft_results);
+
     if (depth == PERFT_DEPTH)
     {
       std::cout << square_names[decode_from_square(move)] << square_names[decode_to_square(move)] << ": "
@@ -134,13 +130,14 @@ uint64_t perft(Position position, int depth, DetailedPerftResults* detailed_perf
 
 int main(int argc, char* argv[])
 {
-  // Position position = Util::Initializers::starting_position();
-  std::string fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
-  Position position = Util::Initializers::fen_string_to_position(fen);
-
-  Util::cli_display_position(&position);
+  Position position = Util::Initializers::starting_position();
+  // std::string fen = "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1";
+  // std::string fen = "rnbqkbnr/p1ppppp1/7p/Pp6/8/8/1PPPPPPP/RNBQKBNR w KQkq b6 0 1";
+  // Position position = Util::Initializers::fen_string_to_position(fen);
 
   int move_count = 0;
+
+  Util::cli_display_position(&position);
 
   DetailedPerftResults detailed_perft_results;
 
