@@ -295,7 +295,7 @@ void white_quiet_pawn_moves(Position* position, std::vector<uint32_t>* moves)
     pawn_location = bitscan(white_pawns_in_position);
     potential_location = pawn_location - 8;
 
-    if (potential_location > 0 && (not_occupied_squares & int_location_to_bitboard(potential_location)))
+    if (potential_location > -1 && (not_occupied_squares & int_location_to_bitboard(potential_location)))
     {
       if (potential_location < 8)
       {
@@ -416,7 +416,7 @@ void white_pawn_attacks(Position* position, std::vector<uint32_t>* moves)
       white_pawn_attack_location -= 2;
 
       potential_white_pawn_attack_bitboard = int_location_to_bitboard(white_pawn_attack_location);
-      if (white_pawn_attack_location > 0 && (white_pawn_location % 8 != 0) &&
+      if (white_pawn_attack_location > -1 && (white_pawn_location % 8 != 0) &&
           (targets & potential_white_pawn_attack_bitboard))
       {
         if (white_pawn_attack_location < 8)
@@ -742,14 +742,16 @@ void castling_moves(Position* position, std::vector<uint32_t>* moves)
     if (position->white_can_castle_kingside && !is_square_attacked(position->white_to_move, e1, position) &&
         !is_square_attacked(position->white_to_move, f1, position) &&
         !is_square_attacked(position->white_to_move, g1, position) &&
-        (all_occupied(position) & WHITE_KINGSIDE_CASTLE_MASK) == 0)
+        (all_occupied(position) & WHITE_KINGSIDE_CASTLE_MASK) == 0 &&
+        (white_rooks(position) & int_location_to_bitboard(h1)))
     {
       moves->push_back(encode_move(e1, g1, true, KING, NO_PIECE, false, false, false, true));
     }
     if (position->white_can_castle_queenside && !is_square_attacked(position->white_to_move, c1, position) &&
         !is_square_attacked(position->white_to_move, d1, position) &&
         !is_square_attacked(position->white_to_move, e1, position) &&
-        (all_occupied(position) & WHITE_QUEENSIDE_CASTLE_MASK) == 0)
+        (all_occupied(position) & WHITE_QUEENSIDE_CASTLE_MASK) == 0 &&
+        (white_rooks(position) & int_location_to_bitboard(a1)))
     {
       moves->push_back(encode_move(e1, c1, true, KING, NO_PIECE, false, false, false, true));
     }
@@ -759,14 +761,16 @@ void castling_moves(Position* position, std::vector<uint32_t>* moves)
     if (position->black_can_castle_kingside && !is_square_attacked(position->white_to_move, e8, position) &&
         !is_square_attacked(position->white_to_move, f8, position) &&
         !is_square_attacked(position->white_to_move, g8, position) &&
-        (all_occupied(position) & BLACK_KINGSIDE_CASTLE_MASK) == 0)
+        (all_occupied(position) & BLACK_KINGSIDE_CASTLE_MASK) == 0 &&
+        (black_rooks(position) & int_location_to_bitboard(h8)))
     {
       moves->push_back(encode_move(e8, g8, false, KING, NO_PIECE, false, false, false, true));
     }
     if (position->black_can_castle_queenside && !is_square_attacked(position->white_to_move, c8, position) &&
         !is_square_attacked(position->white_to_move, d8, position) &&
         !is_square_attacked(position->white_to_move, e8, position) &&
-        (all_occupied(position) & BLACK_QUEENSIDE_CASTLE_MASK) == 0)
+        (all_occupied(position) & BLACK_QUEENSIDE_CASTLE_MASK) == 0 &&
+        (black_rooks(position) & int_location_to_bitboard(a8)))
     {
       moves->push_back(encode_move(e8, c8, false, KING, NO_PIECE, false, false, false, true));
     }

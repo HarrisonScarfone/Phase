@@ -107,12 +107,12 @@ uint64_t perft(Position position, int depth, DetailedPerftResults* detailed_perf
   {
     new_position = make_move(&position, move);
 
-    detailed_perft_results->captures += decode_capture(move);
-    detailed_perft_results->enpassants += decode_enpassant(move);
-    detailed_perft_results->castles += decode_castling(move);
-    detailed_perft_results->promotions += decode_promoted_to_piece(move) == NO_PIECE ? 0 : 1;
-    detailed_perft_results->double_pushes += decode_double_push(move);
-    detailed_perft_results->checks += decode_check(move);
+    // detailed_perft_results->captures += decode_capture(move);
+    // detailed_perft_results->enpassants += decode_enpassant(move);
+    // detailed_perft_results->castles += decode_castling(move);
+    // detailed_perft_results->promotions += decode_promoted_to_piece(move) == NO_PIECE ? 0 : 1;
+    // detailed_perft_results->double_pushes += decode_double_push(move);
+    // detailed_perft_results->checks += decode_check(move);
 
     uint64_t nodes_for_move = perft(new_position, depth - 1, detailed_perft_results);
 
@@ -131,7 +131,7 @@ uint64_t perft(Position position, int depth, DetailedPerftResults* detailed_perf
 int main(int argc, char* argv[])
 {
   Position position = Util::Initializers::starting_position();
-  // std::string fen = "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1";
+  // std::string fen = "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10";
   // std::string fen = "rnbqkbnr/p1ppppp1/7p/Pp6/8/8/1PPPPPPP/RNBQKBNR w KQkq b6 0 1";
   // Position position = Util::Initializers::fen_string_to_position(fen);
 
