@@ -33,6 +33,10 @@ constexpr int bitcount(uint64_t bitboard)
 uint64_t set_bit_high(uint64_t bitboard, int square);
 uint64_t set_bit_low(uint64_t bitboard, int square);
 
+constexpr int file_of(int square) { return square % 8; }
+
+constexpr int rank_of(int square) { return square / 8; }
+
 // clang-format off
 enum Square 
 {
