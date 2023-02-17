@@ -2,52 +2,35 @@
 
 #include "../util/magicbitboards.hpp"
 
-int pawn_score(Position* position)
+int material_score(Position* position)
 {
+  constexpr int pawn_score = 100;
+  constexpr int knight_score = 320;
+  constexpr int bishop_score = 330;
+  constexpr int rook_score = 500;
+  constexpr int queen_score = 900;
+
   int score = 0;
-  int location;
-  uint64_t white_pawn_locations = white_pawns(position);
-  uint64_t black_pawn_locations = black_pawns(position);
+  score += bitcount(white_pawns(position)) * pawn_score;
+  score += bitcount(white_knights(position)) * knight_score;
+  score += bitcount(white_bishops(position)) * bishop_score;
+  score += bitcount(white_rooks(position)) * rook_score;
+  score += bitcount(white_queens(position)) * queen_score;
 
-  while (white_pawn_locations)
-  {
-    location = bitscan(white_pawn_locations);
-    score += white_pawn_location_values[location];
-    score += PAWN_VALUE;
-    white_pawn_locations = set_bit_low(white_pawn_locations, location);
-  }
+  score -= bitcount(black_pawns(position)) * pawn_score;
+  score -= bitcount(black_knights(position)) * knight_score;
+  score -= bitcount(black_bishops(position)) * bishop_score;
+  score -= bitcount(black_rooks(position)) * rook_score;
+  score -= bitcount(black_queens(position)) * queen_score;
 
-  while (black_pawn_locations)
-  {
-    location = bitscan(black_pawn_locations);
-    score -= black_pawn_location_values[location];
-    score -= PAWN_VALUE;
-    black_pawn_locations = set_bit_low(black_pawn_locations, location);
-  }
-
-  return score * (position->white_to_move ? -1 : 1);
-}
-
-int queen_score(Position* position)
-{
-  int score = 0;
-
-  uint64_t wql = white_queens(position);
-  uint64_t bql = black_queens(position);
-
-  while (wql)
-  {
-    score += QUEEN_VALUE;
-    location = bitscan(wql);
-  }
+  return score;
 }
 
 int evaluate_position(Position* position)
 {
   int score = 0;
 
-  score += pawn_score(position);
-  score += queen_score(position);
+  score += material_score(position);
 
-  return score;
+  return score * (position->white_to_move ? -1 : 1);
 }
