@@ -16,6 +16,16 @@ int string_to_int(std::string str)
   return (8 - rank) * 8 + file;
 }
 
+std::string int_to_string(int sq)
+{
+  int file = sq % 8;
+  int rank = 8 - (sq / 8);
+  std::string str = "";
+  str += ('a' + file);
+  str += ('0' + rank);
+  return str;
+}
+
 std::string bitboard_to_string(uint64_t bitboard)
 {
   if (bitboard == 0)

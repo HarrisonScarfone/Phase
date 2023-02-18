@@ -11,8 +11,9 @@ _deps
 notes.txt
 format.txt
 
-# Might as well bring a copy of stockfish
+# Stockfish and Arena
 stockfish
+arena
 
 # Build Ignore
 build

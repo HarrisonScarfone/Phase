@@ -2,35 +2,116 @@
 
 #include "../util/magicbitboards.hpp"
 
-int material_score(Position* position)
+int white_material_score(Position* position)
 {
-  constexpr int pawn_score = 100;
-  constexpr int knight_score = 320;
-  constexpr int bishop_score = 330;
-  constexpr int rook_score = 500;
-  constexpr int queen_score = 900;
-
   int score = 0;
-  score += bitcount(white_pawns(position)) * pawn_score;
-  score += bitcount(white_knights(position)) * knight_score;
-  score += bitcount(white_bishops(position)) * bishop_score;
-  score += bitcount(white_rooks(position)) * rook_score;
-  score += bitcount(white_queens(position)) * queen_score;
+  int location;
 
-  score -= bitcount(black_pawns(position)) * pawn_score;
-  score -= bitcount(black_knights(position)) * knight_score;
-  score -= bitcount(black_bishops(position)) * bishop_score;
-  score -= bitcount(black_rooks(position)) * rook_score;
-  score -= bitcount(black_queens(position)) * queen_score;
+  uint64_t queens = white_queens(position);
+  while (queens)
+  {
+    location = bitscan(queens);
+    score += QUEEN_VALUE;
+    score += queen_pst[location];
+    queens = set_bit_low(queens, location);
+  }
+
+  uint64_t rooks = white_rooks(position);
+  while (rooks)
+  {
+    location = bitscan(rooks);
+    score += ROOK_VALUE;
+    score += rook_pst[location];
+    rooks = set_bit_low(rooks, location);
+  }
+
+  uint64_t bishops = white_bishops(position);
+  while (bishops)
+  {
+    location = bitscan(bishops);
+    score += BISHOP_VALUE;
+    score += white_bishop_pst[location];
+    bishops = set_bit_low(bishops, location);
+  }
+
+  uint64_t knights = white_knights(position);
+  while (knights)
+  {
+    location = bitscan(knights);
+    score += KNIGHT_VALUE;
+    score += knight_pst[location];
+    knights = set_bit_low(knights, location);
+  }
+
+  uint64_t pawns = white_pawns(position);
+  while (pawns)
+  {
+    location = bitscan(pawns);
+    score += PAWN_VALUE;
+    score += white_pawn_pst[location];
+    pawns = set_bit_low(pawns, location);
+  }
+
+  return score;
+}
+
+int black_material_score(Position* position)
+{
+  int score = 0;
+  int location;
+
+  uint64_t queens = black_queens(position);
+  while (queens)
+  {
+    location = bitscan(queens);
+    score += QUEEN_VALUE;
+    score += queen_pst[location];
+    queens = set_bit_low(queens, location);
+  }
+
+  uint64_t rooks = black_rooks(position);
+  while (rooks)
+  {
+    location = bitscan(rooks);
+    score += ROOK_VALUE;
+    score += rook_pst[location];
+    rooks = set_bit_low(rooks, location);
+  }
+
+  uint64_t bishops = black_bishops(position);
+  while (bishops)
+  {
+    location = bitscan(bishops);
+    score += BISHOP_VALUE;
+    score += black_bishop_pst[location];
+    bishops = set_bit_low(bishops, location);
+  }
+
+  uint64_t knights = black_knights(position);
+  while (knights)
+  {
+    location = bitscan(knights);
+    score += KNIGHT_VALUE;
+    score += knight_pst[location];
+    knights = set_bit_low(knights, location);
+  }
+
+  uint64_t pawns = black_pawns(position);
+  while (pawns)
+  {
+    location = bitscan(pawns);
+    score += PAWN_VALUE;
+    score += black_pawn_pst[location];
+    pawns = set_bit_low(pawns, location);
+  }
 
   return score;
 }
 
 int evaluate_position(Position* position)
 {
-  int score = 0;
+  int white_score = white_material_score(position);
+  int black_score = black_material_score(position);
 
-  score += material_score(position);
-
-  return score * (position->white_to_move ? -1 : 1);
+  return position->white_to_move ? white_score - black_score : black_score - white_score;
 }
