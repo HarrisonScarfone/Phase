@@ -31,7 +31,29 @@ void Manager::update_to_position(std::vector<std::string> tokens)
   {
     from_square = string_to_int(token.substr(0, 2));
     to_square = string_to_int(token.substr(2, 2));
-    promotion_peice = token.size() > 4 ? static_cast<PieceAsInt>(string_to_int(token.substr(4, 1))) : NO_PIECE;
+
+    if (token.length() > 4)
+    {
+      switch (token[4])
+      {
+        case 'q':
+          promotion_peice = QUEEN;
+          break;
+        case 'r':
+          promotion_peice = ROOK;
+          break;
+        case 'b':
+          promotion_peice = BISHOP;
+          break;
+        case 'n':
+          promotion_peice = KNIGHT;
+          break;
+      }
+    }
+    else
+    {
+      promotion_peice = NO_PIECE;
+    }
 
     possible_moves = valid_moves_for_position(position);
 
@@ -61,12 +83,16 @@ std::string Manager::get_next_move()
   {
     case QUEEN:
       move_string += "q";
+      break;
     case ROOK:
       move_string += "r";
+      break;
     case BISHOP:
       move_string += "b";
+      break;
     case KNIGHT:
       move_string += "n";
+      break;
   }
 
   return move_string;

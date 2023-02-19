@@ -20,3 +20,6 @@ build
 
 # VSCode Settings
 .vscode
+
+# Logging Output
+logging
