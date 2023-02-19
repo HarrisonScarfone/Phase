@@ -12,6 +12,8 @@ void Manager::update_to_position(std::vector<std::string> tokens)
   int from_square, to_square, move_to_square, move_from_square;
   PieceAsInt promotion_peice, move_promotion_piece;
 
+  tokens.erase(tokens.begin());
+
   if (tokens.at(0) == "startpos")
   {
     position = Util::Initializers::starting_position();
@@ -27,8 +29,8 @@ void Manager::update_to_position(std::vector<std::string> tokens)
 
   for (std::string token : tokens)
   {
-    to_square = string_to_int(token.substr(0, 2));
-    from_square = string_to_int(token.substr(2, 2));
+    from_square = string_to_int(token.substr(0, 2));
+    to_square = string_to_int(token.substr(2, 2));
     promotion_peice = token.size() > 4 ? static_cast<PieceAsInt>(string_to_int(token.substr(4, 1))) : NO_PIECE;
 
     possible_moves = valid_moves_for_position(position);

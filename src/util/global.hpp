@@ -113,6 +113,6 @@ inline uint64_t all_occupied(Position* position) { return position->black | posi
 std::string square_to_string(Square sq);
 int string_to_int(std::string str);
 std::string bitboard_to_string(uint64_t bitboard);
-std::string int_to_string(int sq)
+std::string int_to_string(int sq);
 
 #endif

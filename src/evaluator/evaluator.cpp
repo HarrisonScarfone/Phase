@@ -1,6 +1,10 @@
-#include "evaluator.hpp"
+#define QUEEN_VALUE 900
+#define ROOK_VALUE 500
+#define BISHOP_VALUE 320
+#define KNIGHT_VALUE 300
+#define PAWN_VALUE 100
 
-#include "../util/magicbitboards.hpp"
+#include "evaluator.hpp"
 
 int white_material_score(Position* position)
 {

@@ -7,6 +7,13 @@ class UCI
 {
  public:
   Manager manager;
-  UCI::UCI();
-}
+
+  UCI();
+  void start();
+  void initiate();
+  void send_ready();
+  void go();
+  void update_position(std::string token);
+};
+
 #endif

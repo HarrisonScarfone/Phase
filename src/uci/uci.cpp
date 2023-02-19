@@ -1,76 +1,72 @@
 #include "uci.hpp"
 
-void UCI::handle_request()
+#include <iostream>
+#include <vector>
+
+#include "../game/manager.hpp"
+#include "../util/util.hpp"
+
+UCI::UCI() : manager(){};
+
+void UCI::start()
 {
   std::string move;
-  std::string token;
-  Gamestate::Bitboards bitboards;
+  std::string request;
 
   bool whiteToPlay = true;
 
   std::cout.setf(std::ios::unitbuf);
 
-  while (getline(std::cin, token))
+  while (getline(std::cin, request))
   {
-    if (token == "uci")
+    if (request == "uci")
     {
       initiate();
     }
-    else if (token == "ucinewgame")
+    else if (request == "ucinewgame")
     {
     }
-    else if (token == "setoption")
+    else if (request == "setoption")
     {
-      optionsHandler();
+      // optionsHandler();
     }
-    else if (token == "ucinewgame")
+    else if (request == "ucinewgame")
     {
-      newGameHandler();
+      // newGameHandler();
     }
-    else if (token == "isready")
+    else if (request == "isready")
     {
-      sendReady();
+      send_ready();
     }
-    else if (token.substr(0, 8) == "position")
+    else if (request.substr(0, 8) == "position")
     {
-      State state = handlePositionToken(token.substr(9));
-      bitboards = state.bitboards;
-      whiteToPlay = state.whiteToPlay;
+      update_position(request);
     }
 
-    else if (token.substr(0, 2) == "go")
+    else if (request.substr(0, 2) == "go")
     {
-      gr.writeTurnStart();
-      gr.writeBitboards(&bitboards);
-      SearchReturn sr = Search::getMove(bitboards, whiteToPlay);
-      gr.writeMove(&sr.selectedMove);
-      std::cout << "bestmove " << Translator::engineToUCIMove(&sr.selectedMove) << "\n";
-      gr.writeTurnEnd();
+      go();
     }
   }
 }
 
 void UCI::initiate()
 {
-  std::cout << "id name testengine\n";
+  std::cout << "id name Phase\n";
   std::cout << "id author Harrison Scarfone\n";
-
-  gm.arrayToBitboards();
-
-  std::vector<Gamestate::Bitboards> gameHistory;
-  gameHistory.push_back(gm.getBitboards());
-
   std::cout << "uciok\n";
 }
 
-void UCI::sendReady() { std::cout << "readyok\n"; }
+void UCI::send_ready() { std::cout << "readyok\n"; }
 
-void UCI::optionsHandler() { return; }
+void UCI::update_position(std::string request)
+{
+  std::vector<std::string> tokens = Util::tokenize_string_by_whitespace(request);
+  manager.update_to_position(tokens);
+}
 
-void UCI::newGameHandler() { return; }
-
-void UCI::inputPosition() { return; }
-
-UCI::State UCI::handlePositionToken(std::string token) {}
-
-std::vector<std::string> UCI::vectorizeToken(std::string tokenString) {}
+void UCI::go()
+{
+  std::string next_move = manager.get_next_move();
+  std::cout << "bestmove " << next_move << "\n";
+}

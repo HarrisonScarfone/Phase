@@ -5,14 +5,8 @@
 
 #include "../util/global.hpp"
 
-#define QUEEN_VALUE 900
-#define ROOK_VALUE 500
-#define BISHOP_VALUE 320
-#define KNIGHT_VALUE 300
-#define PAWN_VALUE 100
-
 // clang-format off
-constexpr std::array<int, 64> white_pawn_pst = {{
+constexpr std::array<int, 64> white_pawn_pst = {
     0,  0,  0,  0,  0,  0,  0,  0,
     50, 50, 50, 50, 50, 50, 50, 50,
     10, 10, 20, 30, 30, 20, 10, 10,
@@ -21,9 +15,9 @@ constexpr std::array<int, 64> white_pawn_pst = {{
     5, -5,-10,  0,  0,-10, -5,  5,
     5, 10, 10,-20,-20, 10, 10,  5,
     0,  0,  0,  0,  0,  0,  0,  0
-}};
+};
 
-constexpr std::array<int, 64> black_pawn_pst = {{
+constexpr std::array<int, 64> black_pawn_pst = {
     0,  0,  0,  0,  0,  0,  0,  0,
     5, 10, 10,-20,-20, 10, 10,  5,
     5, -5,-10,  0,  0,-10, -5,  5,
@@ -32,7 +26,7 @@ constexpr std::array<int, 64> black_pawn_pst = {{
     10, 10, 20, 30, 30, 20, 10, 10,
     50, 50, 50, 50, 50, 50, 50, 50,
     0,  0,  0,  0,  0,  0,  0,  0
-}};
+};
 
 constexpr std::array<int, 64> knight_pst = {
     -50, -40, -30, -30, -30, -30, -40, -50,
@@ -45,7 +39,7 @@ constexpr std::array<int, 64> knight_pst = {
     -50, -40, -30, -30, -30, -30, -40, -50
 };
 
-constexpr std::array<int, 64> white_bishop_pst = {{
+constexpr std::array<int, 64> white_bishop_pst = {
     -20, -10, -10, -10, -10, -10, -10, -20,
     -10,   0,   0,   0,   0,   0,   0, -10,
     -10,   0,   5,  10,  10,   5,   0, -10,
@@ -54,9 +48,9 @@ constexpr std::array<int, 64> white_bishop_pst = {{
     -10,  10,  10,  10,  10,  10,  10, -10,
     -10,   5,   0,   0,   0,   0,   5, -10,
     -20, -10, -10, -10, -10, -10, -10, -20
-}};
+};
 
-constexpr std::array<int, 64> black_bishop_pst = {{
+constexpr std::array<int, 64> black_bishop_pst = {
     -20, -10, -10, -10, -10, -10, -10, -20,
     -10,   5,   0,   0,   0,   0,   5, -10,
     -10,  10,  10,  10,  10,  10,  10, -10,
@@ -65,7 +59,7 @@ constexpr std::array<int, 64> black_bishop_pst = {{
     -10,   0,   5,  10,  10,   5,   0, -10,
     -10,   0,   0,   0,   0,   0,   0, -10,
     -20, -10, -10, -10, -10, -10, -10, -20
-}};
+};
 
 constexpr std::array<int, 64> rook_pst = {
     -5, -3, 1, 3, 3, 1, -3, -5,
@@ -75,7 +69,7 @@ constexpr std::array<int, 64> rook_pst = {
     0, 6, 11, 13, 13, 11, 6, 0,
     -1, 5, 10, 12, 12, 10, 5, -1,
     -3, 1, 5, 7, 7, 5, 1, -3,
-    -5, -3, 1, 3, 3, 1, -3, -5,
+    -5, -3, 1, 3, 3, 1, -3, -5
 };
 
 constexpr std::array<int, 64> queen_pst = {
@@ -86,7 +80,7 @@ constexpr std::array<int, 64> queen_pst = {
       0,  0,   5,  5,  5,   5,   0,  -5,
     -10,  5,   5,  5,  5,   5,   0, -10,
     -10,  0,   5,  0,  0,   0,   0, -10,
-    -20, -10, -10, -5, -5, -10, -10, -20,
+    -20, -10, -10, -5, -5, -10, -10, -20
 };
 // clang-format on
 

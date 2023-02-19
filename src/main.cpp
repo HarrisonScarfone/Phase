@@ -1,3 +1,10 @@
-#include "game/manager.hpp"
 
-int main() { play_game(); }
+#include <iostream>
+
+#include "uci/uci.hpp"
+
+int main()
+{
+  UCI uci = UCI();
+  uci.start();
+}
