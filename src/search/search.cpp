@@ -10,17 +10,17 @@
 uint32_t find_move(Position* position, int depth)
 {
   uint32_t best_move;
-  int_fast32_t best_score = -1000000000;
+  int_fast32_t best_score = INT_FAST32_MIN;
   int_fast32_t current_score;
   std::vector<uint32_t> moves = valid_moves_for_position(*position);
 
-  int alpha = 10000000 * (position->white_to_move ? -1 : 1);
-  int beta = 10000000 * (position->white_to_move ? 1 : -1);
+  int_fast32_t alpha = -100000;
+  int_fast32_t beta = 100000;
 
   for (uint32_t move : moves)
   {
     Position new_position = make_move(position, move);
-    current_score = minimax(&new_position, depth - 1, alpha, beta);
+    current_score = -negamax(&new_position, depth - 1, -beta, -alpha);
 
     if (current_score > best_score)
     {
@@ -32,100 +32,34 @@ uint32_t find_move(Position* position, int depth)
   return best_move;
 }
 
-int minimax(Position* position, int depth, int alpha, int beta)
+int_fast32_t negamax(Position* position, int depth, int_fast32_t alpha, int_fast32_t beta)
 {
-  if (depth == 0) return evaluate_position(position);
+  if (depth == 0)
+  {
+    return evaluate_position(position);
+  }
 
+  int_fast32_t score = -100000;
   std::vector<uint32_t> possible_moves = valid_moves_for_position(*position);
 
-  if (position->white_to_move)
+  if (possible_moves.empty())
   {
-    int max_score = -10000000;
-    for (uint32_t move : possible_moves)
-    {
-      Position new_position = make_move(position, move);
-      int score = minimax(&new_position, depth - 1, alpha, beta);
-      max_score = std::max(max_score, score);
-      alpha = std::max(alpha, score);
-      if (beta <= alpha) break;
-    }
-    return max_score;
+    return -75000;
   }
-  else
+
+  for (uint32_t move : possible_moves)
   {
-    int min_score = 10000000;
-    for (uint32_t move : possible_moves)
+    Position new_position = make_move(position, move);
+    int_fast32_t current_score = -negamax(&new_position, depth - 1, -beta, -alpha);
+
+    score = std::max(current_score, score);
+    alpha = std::max(score, alpha);
+
+    if (alpha >= beta)
     {
-      Position new_position = make_move(position, move);
-      int score = minimax(&new_position, depth - 1, alpha, beta);
-      min_score = std::min(min_score, score);
-      beta = std::min(beta, score);
-      if (beta <= alpha) break;
+      break;
     }
-    return min_score;
   }
+
+  return score;
 }
-
-// int alpha_beta_max(Position* position, int alpha, int beta, int depth)
-// {
-//   if (depth == 0)
-//   {
-//     return evaluate_position(position);
-//   }
-
-//   std::vector<uint32_t> moves = valid_moves_for_position(*position);
-//   int best_score = -10000000;
-
-//   for (uint32_t move : moves)
-//   {
-//     Position new_position = make_move(position, move);
-//     int score = alpha_beta_min(&new_position, alpha, beta, depth - 1);
-
-//     if (score >= beta)
-//     {
-//       return score;
-//     }
-//     if (score > best_score)
-//     {
-//       best_score = score;
-//     }
-//     if (score > alpha)
-//     {
-//       alpha = score;
-//     }
-//   }
-
-//   return best_score;
-// }
-
-// int alpha_beta_min(Position* position, int alpha, int beta, int depth)
-// {
-//   if (depth == 0)
-//   {
-//     return evaluate_position(position);
-//   }
-
-//   std::vector<uint32_t> moves = valid_moves_for_position(*position);
-//   int best_score = -10000000;
-
-//   for (uint32_t move : moves)
-//   {
-//     Position new_position = make_move(position, move);
-//     int score = alpha_beta_max(&new_position, alpha, beta, depth - 1);
-
-//     if (score <= alpha)
-//     {
-//       return score;
-//     }
-//     if (score < best_score)
-//     {
-//       best_score = score;
-//     }
-//     if (score < beta)
-//     {
-//       beta = score;
-//     }
-//   }
-
-//   return best_score;
-// }

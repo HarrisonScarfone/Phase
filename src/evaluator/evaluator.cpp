@@ -117,5 +117,5 @@ int evaluate_position(Position* position)
   int white_score = white_material_score(position);
   int black_score = black_material_score(position);
 
-  return (white_score - black_score) * (position->white_to_move ? -1 : 1);
+  return (white_score - black_score) * (position->white_to_move ? 1 : -1);
 }
