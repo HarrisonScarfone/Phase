@@ -52,11 +52,6 @@ int_fast32_t negamax(Position* position, int depth, int_fast32_t alpha, int_fast
     Position new_position = make_move(position, move);
     int_fast32_t current_score = -negamax(&new_position, depth - 1, -beta, -alpha);
 
-    if (abs(current_score) == 75000)
-    {
-      current_score *= (decode_check(move) > 0 ? -1 : 1);
-    }
-
     score = std::max(current_score, score);
     alpha = std::max(score, alpha);
 
