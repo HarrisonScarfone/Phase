@@ -15,16 +15,19 @@
 
 uint32_t find_move_with_statistics(Position* position, int depth)
 {
+  uint64_t nodes = 0;
   auto start_time = std::chrono::high_resolution_clock::now();
-  uint32_t best_move = find_move(position, depth);
+  uint32_t best_move = find_move(position, depth, &nodes);
   auto end_time = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
   std::cout << "Time taken: " << duration.count() << "ms" << std::endl;
+  std::cout << "Nodes: " << nodes << std::endl;
+  std::cout << "Nodes per second: " << nodes / (duration.count() / 1000) << std::endl;
 
   return best_move;
 }
 
-uint32_t find_move(Position* position, int depth)
+uint32_t find_move(Position* position, int depth, uint64_t* nodes)
 {
   uint32_t best_move;
   int_fast32_t best_score = MY_BEST_MOVE_START_VAL;
@@ -34,7 +37,8 @@ uint32_t find_move(Position* position, int depth)
   for (uint32_t move : moves)
   {
     Position new_position = make_move(position, move);
-    current_score = -negamax(&new_position, depth - 1, -THEIR_BEST_MOVE_START_VAL, -MY_BEST_MOVE_START_VAL);
+    current_score = -negamax(&new_position, depth - 1, -THEIR_BEST_MOVE_START_VAL, -MY_BEST_MOVE_START_VAL, nodes);
+    *nodes += 1;
 
     if (current_score > best_score)
     {
@@ -46,10 +50,12 @@ uint32_t find_move(Position* position, int depth)
   return best_move;
 }
 
-int_fast32_t negamax(Position* position, int depth, int_fast32_t my_best_move, int_fast32_t their_best_move)
+int_fast32_t negamax(Position* position, int depth, int_fast32_t my_best_move, int_fast32_t their_best_move,
+                     uint64_t* nodes)
 {
   if (depth == 0)
   {
+    *nodes += 1;
     return evaluate_position(position);
   }
 
@@ -64,7 +70,7 @@ int_fast32_t negamax(Position* position, int depth, int_fast32_t my_best_move, i
   for (uint32_t move : possible_moves)
   {
     Position new_position = make_move(position, move);
-    int_fast32_t current_score = -negamax(&new_position, depth - 1, -their_best_move, -my_best_move);
+    int_fast32_t current_score = -negamax(&new_position, depth - 1, -their_best_move, -my_best_move, nodes);
 
     score = std::max(current_score, score);
     my_best_move = std::max(score, my_best_move);
