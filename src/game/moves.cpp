@@ -2,6 +2,40 @@
 
 #include <algorithm>
 
+PieceAsInt victim_on_square(Position* position, Square square)
+{
+  uint64_t target_bitboard = int_location_to_bitboard(square);
+  if (position->pawns & target_bitboard)
+  {
+    return PAWN;
+  }
+  else if (position->knights & target_bitboard)
+  {
+    return KNIGHT;
+  }
+  else if (position->bishops & target_bitboard)
+  {
+    return BISHOP;
+  }
+  else if (position->rooks & target_bitboard)
+  {
+    return ROOK;
+  }
+  else if (position->queens & target_bitboard)
+  {
+    return QUEEN;
+  }
+  else if (position->kings & target_bitboard)
+  {
+    return KING;
+  }
+  else
+  {
+    // we are attacking an enpassant square
+    return PAWN;
+  }
+}
+
 Position make_move(Position* position, uint32_t move)
 {
   Position new_position = *position;

@@ -39,6 +39,8 @@ enum PieceAsInt
   NO_PIECE,
 };
 
+PieceAsInt victim_on_square(Position* position, Square square);
+
 enum MoveMasksIndices
 {
   FROM_SQUARE,
