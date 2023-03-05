@@ -1,12 +1,62 @@
-#define QUEEN_VALUE 900
+#define QUEEN_VALUE 1100
 #define ROOK_VALUE 500
-#define BISHOP_VALUE 320
-#define KNIGHT_VALUE 300
+#define BISHOP_VALUE 350
+#define KNIGHT_VALUE 325
 #define PAWN_VALUE 100
 
 #include "evaluator.hpp"
 
-int white_material_score(Position* position)
+int_fast32_t pawn_score(uint64_t my_pawns, uint64_t their_pawns)
+{
+  uint64_t current_mask;
+  uint64_t all_my_pawns = my_pawns;
+  int_fast32_t score = 0;
+
+  while (my_pawns)
+  {
+    int location = bitscan(my_pawns);
+
+    // Pawn peice square val
+    score += PAWN_VALUE;
+    score += white_pawn_pst[location];
+
+    // Doubled pawns and passed pawns
+    current_mask = pawn_file_masks[location];
+    if (current_mask & all_my_pawns)
+    {
+      score -= 10;
+    }
+    if (!(current_mask & their_pawns))
+    {
+      score += 20;
+    }
+
+    // Isolated and connected pawns
+    current_mask = pawn_isolation_masks[location];
+    if (!(current_mask & all_my_pawns))
+    {
+      score -= 10;
+    }
+    else
+    {
+      score += 10;
+    }
+
+    my_pawns = set_bit_low(my_pawns, location);
+  }
+
+  return score;
+}
+
+int_fast32_t pawn_evaluation(Position* position)
+{
+  uint64_t wpawns = white_pawns(position);
+  uint64_t bpawns = black_pawns(position);
+
+  return pawn_score(wpawns, bpawns) - pawn_score(bpawns, wpawns);
+}
+
+int_fast32_t white_material_score(Position* position)
 {
   int score = 0;
   int location;
@@ -47,19 +97,10 @@ int white_material_score(Position* position)
     knights = set_bit_low(knights, location);
   }
 
-  uint64_t pawns = white_pawns(position);
-  while (pawns)
-  {
-    location = bitscan(pawns);
-    score += PAWN_VALUE;
-    score += white_pawn_pst[location];
-    pawns = set_bit_low(pawns, location);
-  }
-
   return score;
 }
 
-int black_material_score(Position* position)
+int_fast32_t black_material_score(Position* position)
 {
   int score = 0;
   int location;
@@ -100,22 +141,15 @@ int black_material_score(Position* position)
     knights = set_bit_low(knights, location);
   }
 
-  uint64_t pawns = black_pawns(position);
-  while (pawns)
-  {
-    location = bitscan(pawns);
-    score += PAWN_VALUE;
-    score += black_pawn_pst[location];
-    pawns = set_bit_low(pawns, location);
-  }
-
   return score;
 }
 
-int evaluate_position(Position* position)
+int_fast32_t evaluate_position(Position* position)
 {
-  int white_score = white_material_score(position);
-  int black_score = black_material_score(position);
+  int_fast32_t white_score = white_material_score(position);
+  int_fast32_t black_score = black_material_score(position);
 
-  return (white_score - black_score) * (position->white_to_move ? 1 : -1);
+  int_fast32_t pawn_score = pawn_evaluation(position);
+
+  return ((white_score - black_score) + pawn_score) * (position->white_to_move ? 1 : -1);
 }

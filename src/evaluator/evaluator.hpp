@@ -84,6 +84,55 @@ constexpr std::array<int, 64> queen_pst = {
 };
 // clang-format on
 
-int evaluate_position(Position* position);
+template <typename Generator>
+constexpr std::array<uint64_t, 64> create_pawn_table(Generator&& f)
+{
+  std::array<uint64_t, 64> square_values = {};
+  for (int i = 0; i < 64; i++)
+  {
+    square_values[i] = f(i);
+  }
+  return square_values;
+}
+
+constexpr uint64_t pawn_file_mask(int square)
+{
+  uint64_t mask = 0;
+
+  for (int i = 0; i < 64; i++)
+  {
+    if ((i != square) && ((i % 8) == square))
+    {
+      mask |= int_location_to_bitboard(i);
+    }
+  }
+
+  return mask;
+}
+
+// define this as no pawn in file beside it (either side)
+constexpr uint64_t pawn_isolation_mask(int square)
+{
+  uint64_t mask = 0;
+
+  for (int i = 0; i < 64; i++)
+  {
+    if (i % 8 != 0 && i == square && square > -1)
+    {
+      mask |= int_location_to_bitboard(square - 1);
+    }
+    if (i % 8 != 7 && i == square && square < 64)
+    {
+      mask |= int_location_to_bitboard(square + 1);
+    }
+  }
+
+  return mask;
+}
+
+constexpr auto pawn_file_masks = create_pawn_table(pawn_file_mask);
+constexpr auto pawn_isolation_masks = create_pawn_table(pawn_isolation_mask);
+
+int_fast32_t evaluate_position(Position* position);
 
 #endif
