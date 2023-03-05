@@ -14,7 +14,8 @@
 #define THEIR_BEST_MOVE_START_VAL 100000
 #define MY_BEST_MOVE_START_VAL -100000
 
-// Limit quiesnce depth for now
+// define some depth limits
+#define MAX_KILLER_HISTORY_DEPTH 100
 #define MAX_QUIESCENCE_DEPTH 3
 
 // clang-format off
@@ -30,71 +31,49 @@ const std::array<std::array<int, 6>, 6> mvv_lva_table = {{
 }};
 // clang-format on
 
-bool compare_mvv_lva_move_value(Position* position, uint32_t move1, uint32_t move2)
-{
-  PieceAsInt attacker_piece_move1 = decode_moved_piece(move1);
-  PieceAsInt victim_piece_move1 = victim_on_square(position, static_cast<Square>(decode_to_square(move1)));
-  PieceAsInt attacker_piece_move2 = decode_moved_piece(move2);
-  PieceAsInt victim_piece_move2 = victim_on_square(position, static_cast<Square>(decode_to_square(move2)));
+std::array<std::array<int_fast32_t, 2>, MAX_KILLER_HISTORY_DEPTH> killer_moves = {};
 
-  return mvv_lva_table[attacker_piece_move1][victim_piece_move1] >
-         mvv_lva_table[attacker_piece_move2][victim_piece_move2];
+int_fast32_t score_move(Position* position, uint32_t move, int depth)
+{
+  // // we not need an mvvlva score for a non capture
+  if (!decode_capture(move))
+  {
+    // score 1st killer move
+    if (killer_moves[0][depth] == move)
+    {
+      return 15000;
+    }
+    // score 2nd killer move
+    else if (killer_moves[1][depth] == move)
+    {
+      return 14000;
+    }
+
+    return 0;
+  }
+
+  PieceAsInt attacker_piece_move = decode_moved_piece(move);
+  PieceAsInt victim_piece_move = victim_on_square(position, static_cast<Square>(decode_to_square(move)));
+
+  return mvv_lva_table[attacker_piece_move][victim_piece_move] + 20000;
 }
 
-std::vector<uint32_t> inline mvv_lva_ordered_moves(Position* position)
+bool compare_move_pair(Position* position, uint32_t move1, uint32_t move2, int depth)
+{
+  int_fast32_t score1 = score_move(position, move1, depth);
+  int_fast32_t score2 = score_move(position, move2, depth);
+
+  return score1 > score2;
+}
+
+std::vector<uint32_t> inline ordered_moves_for_search(Position* position, int depth)
 {
   std::vector<uint32_t> moves = valid_moves_for_position(*position);
   std::sort(moves.begin(), moves.end(),
-            [position](uint32_t move1, uint32_t move2) { return compare_mvv_lva_move_value(position, move1, move2); });
+            [position, depth](uint32_t move1, uint32_t move2)
+            { return compare_move_pair(position, move1, move2, depth); });
   return moves;
 }
-
-// // limit this to depth 3 for now
-// int_fast32_t inline quiescence_search(Position* position, int depth, int_fast32_t my_best_move_score,
-//                                       int_fast32_t their_best_move_score, uint64_t* nodes)
-// {
-//   if (depth == 0)
-//   {
-//     return evaluate_position(position);
-//   }
-
-//   int_fast32_t position_score = evaluate_position(position);
-//   *nodes += 1;
-
-//   if (position_score >= their_best_move_score)
-//   {
-//     return their_best_move_score;
-//   }
-
-//   if (position_score > my_best_move_score)
-//   {
-//     my_best_move_score = position_score;
-//   }
-
-//   std::vector<uint32_t> possible_moves = valid_moves_for_position(*position);
-//   auto last_capture_pointer = std::remove_if(possible_moves.begin(), possible_moves.end(),
-//                                              [](uint32_t move) { return decode_capture(move) == 0; });
-//   possible_moves.erase(last_capture_pointer, possible_moves.end());
-
-//   int_fast32_t score = MY_BEST_MOVE_START_VAL;
-
-//   for (uint32_t move : possible_moves)
-//   {
-//     Position new_position = make_move(position, move);
-//     int_fast32_t current_score =
-//         -quiescence_search(&new_position, depth - 1, -their_best_move_score, -my_best_move_score, nodes);
-
-//     score = std::max(current_score, score);
-//     my_best_move_score = std::max(score, my_best_move_score);
-
-//     if (my_best_move_score >= their_best_move_score)
-//     {
-//       return my_best_move_score;
-//     }
-//   }
-
-//   return my_best_move_score;
-// }
 
 uint32_t find_move_with_statistics(Position* position, int depth)
 {
@@ -103,9 +82,20 @@ uint32_t find_move_with_statistics(Position* position, int depth)
   uint32_t best_move = find_move(position, depth, &nodes);
   auto end_time = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-  std::cout << "Time taken: " << duration.count() << "ms" << std::endl;
-  std::cout << "Nodes: " << nodes << std::endl;
-  // std::cout << "Nodes per second: " << nodes / (duration.count() / 1000) << std::endl;
+
+  float nps;
+
+  try
+  {
+    nps = nodes / ((duration.count() + 1.0) / 1000);
+  }
+  catch (const std::exception& e)
+  {
+    nps = 0.0;
+  }
+
+  std::cout << "info"
+            << " nodes " << nodes << " nps " << nps << " time " << duration.count() << std::endl;
 
   return best_move;
 }
@@ -115,13 +105,12 @@ uint32_t find_move(Position* position, int depth, uint64_t* nodes)
   uint32_t best_move;
   int_fast32_t best_score = MY_BEST_MOVE_START_VAL;
   int_fast32_t current_score;
-  std::vector<uint32_t> moves = mvv_lva_ordered_moves(position);
-  // std::vector<uint32_t> moves = valid_moves_for_position(*position);
+  std::vector<uint32_t> moves = ordered_moves_for_search(position, depth);
 
   for (uint32_t move : moves)
   {
     Position new_position = make_move(position, move);
-    current_score = -negamax(&new_position, depth - 1, -THEIR_BEST_MOVE_START_VAL, -MY_BEST_MOVE_START_VAL, nodes);
+    current_score = -negamax(&new_position, depth - 1, -THEIR_BEST_MOVE_START_VAL, -best_score, nodes);
     *nodes += 1;
 
     if (current_score > best_score)
@@ -134,39 +123,54 @@ uint32_t find_move(Position* position, int depth, uint64_t* nodes)
   return best_move;
 }
 
-int_fast32_t negamax(Position* position, int depth, int_fast32_t my_best_move_score, int_fast32_t their_best_move_score,
-                     uint64_t* nodes)
+int_fast32_t negamax(Position* position, int depth, int_fast32_t alpha, int_fast32_t beta, uint64_t* nodes)
 {
   if (depth == 0)
   {
     *nodes += 1;
-    // return evaluate_position(position);
-    // return quiescence_search(position, MAX_QUIESCENCE_DEPTH, my_best_move_score, their_best_move_score, nodes);
     return evaluate_position(position);
   }
 
-  int_fast32_t score = MY_BEST_MOVE_START_VAL;
-  std::vector<uint32_t> possible_moves = mvv_lva_ordered_moves(position);
-  // std::vector<uint32_t> possible_moves = valid_moves_for_position(*position);
-
+  std::vector<uint32_t> possible_moves = ordered_moves_for_search(position, depth);
   if (possible_moves.empty())
   {
     return CHECKMATE_FOR_LAST_PLAYER;
   }
 
+  int_fast32_t score;
+  bool first_move = true;
+
   for (uint32_t move : possible_moves)
   {
     Position new_position = make_move(position, move);
-    int_fast32_t current_score = -negamax(&new_position, depth - 1, -their_best_move_score, -my_best_move_score, nodes);
 
-    score = std::max(current_score, score);
-    my_best_move_score = std::max(score, my_best_move_score);
-
-    if (my_best_move_score >= their_best_move_score)
+    if (first_move)
     {
-      return my_best_move_score;
+      score = -negamax(&new_position, depth - 1, -beta, -alpha, nodes);
+      *nodes += 1;
+      first_move = false;
+    }
+    else
+    {
+      score = -negamax(&new_position, depth - 1, -alpha - 1, -alpha, nodes);
+      *nodes += 1;
+
+      if (alpha < score && score < beta)
+      {
+        score = -negamax(&new_position, depth - 1, -beta, -score, nodes);
+        *nodes += 1;
+      }
+    }
+
+    alpha = std::max(alpha, score);
+
+    if (alpha >= beta)
+    {
+      killer_moves[1][depth] = killer_moves[0][depth];
+      killer_moves[0][depth] = move;
+      break;
     }
   }
 
-  return score;
+  return alpha;
 }
