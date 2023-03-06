@@ -117,19 +117,29 @@ uint32_t find_move(Position* position, int depth, uint64_t* nodes)
 {
   uint32_t best_move;
   int_fast32_t best_score = MY_BEST_MOVE_START_VAL;
-  int_fast32_t current_score;
-  std::vector<uint32_t> moves = ordered_moves_for_search(position, depth);
 
-  for (uint32_t move : moves)
+  for (int i = 1; i <= depth; i++)
   {
-    Position new_position = make_move(position, move);
-    current_score = -negamax(&new_position, depth - 1, -THEIR_BEST_MOVE_START_VAL, -best_score, nodes);
-    *nodes += 1;
+    int_fast32_t current_score;
+    std::vector<uint32_t> moves = ordered_moves_for_search(position, i);
 
-    if (current_score > best_score)
+    for (uint32_t move : moves)
     {
-      best_move = move;
-      best_score = current_score;
+      Position new_position = make_move(position, move);
+      current_score = -negamax(&new_position, i - 1, -THEIR_BEST_MOVE_START_VAL, -MY_BEST_MOVE_START_VAL, nodes);
+      *nodes += 1;
+
+      if (current_score > best_score)
+      {
+        best_move = move;
+        best_score = current_score;
+      }
+    }
+
+    if (best_score == CHECKMATE_FOR_LAST_PLAYER)
+    {
+      // we want to return the earliest mate
+      return best_move;
     }
   }
 

@@ -26,8 +26,6 @@ using a uinsigned 32 bit number
 0100 0000 0000 0000 0000 0000 0000 0000   |   check (added in move validation)
 */
 
-#define DONT_CARE 0
-
 enum PieceAsInt
 {
   KNIGHT,
