@@ -117,10 +117,10 @@ uint32_t find_move(Position* position, int depth, uint64_t* nodes)
 {
   uint32_t best_move;
   int_fast32_t best_score = MY_BEST_MOVE_START_VAL;
-
   for (int i = 1; i <= depth; i++)
   {
-    int_fast32_t current_score;
+    best_score = MY_BEST_MOVE_START_VAL;
+    int_fast32_t current_score = 0;
     std::vector<uint32_t> moves = ordered_moves_for_search(position, i);
 
     for (uint32_t move : moves)

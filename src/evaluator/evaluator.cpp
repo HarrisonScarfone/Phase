@@ -12,8 +12,8 @@ int_fast32_t board_control_difference(Position* position)
 {
   int_fast32_t score = 0;
 
-  score += bitcount(attacked_squares(true, position)) * 5;
-  score -= bitcount(attacked_squares(false, position)) * 5;
+  score += bitcount(attacked_squares(true, position)) * 2;
+  score -= bitcount(attacked_squares(false, position)) * 2;
 
   return score;
 }
@@ -38,10 +38,10 @@ int_fast32_t pawn_score(uint64_t my_pawns, uint64_t my_pieces, uint64_t their_pa
     {
       score -= 10;
     }
-    // we also don't want to block pawns with pieces, this is bad
+    // we also don't want to block pawns with pieces
     if (current_mask & (~all_my_pawns & my_pieces))
     {
-      score -= 30;
+      score -= 10;
     }
     if (!(current_mask & their_pawns))
     {
