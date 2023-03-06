@@ -32,6 +32,7 @@ const std::array<std::array<int, 6>, 6> mvv_lva_table = {{
 // clang-format on
 
 std::array<std::array<int_fast32_t, 2>, MAX_KILLER_HISTORY_DEPTH> killer_moves = {};
+std::array<std::array<int_fast32_t, 64>, 64> history;
 
 int_fast32_t score_move(Position* position, uint32_t move, int depth)
 {
@@ -39,6 +40,7 @@ int_fast32_t score_move(Position* position, uint32_t move, int depth)
   score is  -> captures (mvvlva ranked)
             -> checks
             -> killer moves (quiet only, early beta cutoff forcing)
+            -> history moves (played frequently recently)
   */
 
   if (!decode_capture(move))
@@ -53,13 +55,14 @@ int_fast32_t score_move(Position* position, uint32_t move, int depth)
     {
       return 14000;
     }
-
-    if (decode_check(move))
+    else if (decode_check(move))
     {
       return 10000;
     }
-
-    return 0;
+    else
+    {
+      return history[decode_from_square(move)][decode_to_square(move)] / 1000;
+    }
   }
 
   PieceAsInt attacker_piece_move = decode_moved_piece(move);
@@ -130,6 +133,8 @@ uint32_t find_move(Position* position, int depth, uint64_t* nodes)
     }
   }
 
+  std::cout << "info"
+            << " eval " << best_score << std::endl;
   return best_move;
 }
 
@@ -162,8 +167,11 @@ int_fast32_t negamax(Position* position, int depth, int_fast32_t alpha, int_fast
       }
     }
 
-    // engine should only stalemate if we are getting pumped
-    return -1000;
+    /*
+      Engine should return stalemate if we have the option to stalemate
+      while we think we are losing (only positive selection available)
+    */
+    return 1;
   }
 
   int_fast32_t score;
@@ -197,7 +205,12 @@ int_fast32_t negamax(Position* position, int depth, int_fast32_t alpha, int_fast
     {
       killer_moves[1][depth] = killer_moves[0][depth];
       killer_moves[0][depth] = move;
+      history[decode_from_square(move)][decode_to_square(move)] += depth * depth;
       break;
+    }
+    else
+    {
+      history[decode_from_square(move)][decode_to_square(move)] -= depth * depth;
     }
   }
 
