@@ -228,13 +228,13 @@ bool is_square_attacked(bool white, int square, Position* position)
          (king_moves[square] & (white ? black_kings(position) : white_kings(position)));
 }
 
-uint64_t attacked_squares(bool white, Position position)
+uint64_t attacked_squares(bool white, Position* position)
 {
   uint64_t attacked = 0;
   for (int i = 63; i > -1; i--)
   {
     attacked <<= 1;
-    attacked |= is_square_attacked(white, i, &position);
+    attacked |= is_square_attacked(white, i, position);
   }
 
   return attacked;

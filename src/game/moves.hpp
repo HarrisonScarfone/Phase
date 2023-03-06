@@ -91,7 +91,7 @@ inline bool decode_castling(uint32_t move) { return move & move_masks[8]; }
 inline bool decode_check(uint32_t move) { return move & move_masks[9]; }
 
 bool is_square_attacked(bool white, int square, Position* position);
-uint64_t attacked_squares(bool white, Position position);
+uint64_t attacked_squares(bool white, Position* position);
 uint32_t encode_move(int from_square, int to_square, bool whites_turn, int moved_peice, int promoted_to_piece,
                      bool capture, bool double_push, bool enpassant, bool castling);
 

@@ -6,7 +6,19 @@
 
 #include "evaluator.hpp"
 
-int_fast32_t pawn_score(uint64_t my_pawns, uint64_t their_pawns)
+#include "../game/moves.hpp"
+
+int_fast32_t board_control_difference(Position* position)
+{
+  int_fast32_t score = 0;
+
+  score += bitcount(attacked_squares(true, position)) * 5;
+  score -= bitcount(attacked_squares(false, position)) * 5;
+
+  return score;
+}
+
+int_fast32_t pawn_score(uint64_t my_pawns, uint64_t my_pieces, uint64_t their_pawns)
 {
   uint64_t current_mask;
   uint64_t all_my_pawns = my_pawns;
@@ -25,6 +37,11 @@ int_fast32_t pawn_score(uint64_t my_pawns, uint64_t their_pawns)
     if (current_mask & all_my_pawns)
     {
       score -= 10;
+    }
+    // we also don't want to block pawns with pieces, this is bad
+    if (current_mask & (~all_my_pawns & my_pieces))
+    {
+      score -= 30;
     }
     if (!(current_mask & their_pawns))
     {
@@ -52,8 +69,10 @@ int_fast32_t pawn_evaluation(Position* position)
 {
   uint64_t wpawns = white_pawns(position);
   uint64_t bpawns = black_pawns(position);
+  uint64_t wpieces = white_occupied_no_king(position);
+  uint64_t bpieces = black_occupied_no_king(position);
 
-  return pawn_score(wpawns, bpawns) - pawn_score(bpawns, wpawns);
+  return pawn_score(wpawns, wpieces, bpawns) - pawn_score(bpawns, bpieces, wpawns);
 }
 
 int_fast32_t white_material_score(Position* position)
@@ -150,6 +169,7 @@ int_fast32_t evaluate_position(Position* position)
   int_fast32_t black_score = black_material_score(position);
 
   int_fast32_t pawn_score = pawn_evaluation(position);
+  int_fast32_t board_control_score = board_control_difference(position);
 
-  return ((white_score - black_score) + pawn_score) * (position->white_to_move ? 1 : -1);
+  return ((white_score - black_score) + pawn_score + board_control_score) * (position->white_to_move ? 1 : -1);
 }

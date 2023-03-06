@@ -35,7 +35,12 @@ std::array<std::array<int_fast32_t, 2>, MAX_KILLER_HISTORY_DEPTH> killer_moves =
 
 int_fast32_t score_move(Position* position, uint32_t move, int depth)
 {
-  // // we not need an mvvlva score for a non capture
+  /*
+  score is  -> captures (mvvlva ranked)
+            -> checks
+            -> killer moves (quiet only, early beta cutoff forcing)
+  */
+
   if (!decode_capture(move))
   {
     // score 1st killer move
@@ -47,6 +52,11 @@ int_fast32_t score_move(Position* position, uint32_t move, int depth)
     else if (killer_moves[1][depth] == move)
     {
       return 14000;
+    }
+
+    if (decode_check(move))
+    {
+      return 10000;
     }
 
     return 0;
@@ -134,7 +144,26 @@ int_fast32_t negamax(Position* position, int depth, int_fast32_t alpha, int_fast
   std::vector<uint32_t> possible_moves = ordered_moves_for_search(position, depth);
   if (possible_moves.empty())
   {
-    return CHECKMATE_FOR_LAST_PLAYER;
+    // look for a mate
+    if (position->white_to_move)
+    {
+      int king_position = bitboard_to_square(white_kings(position));
+      if (is_square_attacked(true, king_position, position))
+      {
+        return CHECKMATE_FOR_LAST_PLAYER;
+      }
+    }
+    else
+    {
+      int king_position = bitboard_to_square(black_kings(position));
+      if (is_square_attacked(false, king_position, position))
+      {
+        return CHECKMATE_FOR_LAST_PLAYER;
+      }
+    }
+
+    // engine should only stalemate if we are getting pumped
+    return -1000;
   }
 
   int_fast32_t score;
