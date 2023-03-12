@@ -114,5 +114,6 @@ std::string square_to_string(Square sq);
 int string_to_int(std::string str);
 std::string bitboard_to_string(uint64_t bitboard);
 std::string int_to_string(int sq);
+std::string uint_move_to_engine_string_move(uint32_t move);
 
 #endif

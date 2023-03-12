@@ -1,5 +1,6 @@
 #include "global.hpp"
 
+#include "../game/moves.hpp"
 #include "util.hpp"
 
 std::string square_to_string(Square sq)
@@ -48,4 +49,29 @@ uint64_t set_bit_high(uint64_t bitboard, int square) { return bitboard | (static
 uint64_t set_bit_low(uint64_t bitboard, int square)
 {
   return bitboard & ~(set_bit_high(static_cast<uint64_t>(0), square));
+}
+
+std::string uint_move_to_engine_string_move(uint32_t move)
+{
+  std::string move_string = "";
+  move_string += int_to_string(decode_from_square(move));
+  move_string += int_to_string(decode_to_square(move));
+
+  switch (decode_promoted_to_piece(move))
+  {
+    case QUEEN:
+      move_string += "q";
+      break;
+    case ROOK:
+      move_string += "r";
+      break;
+    case BISHOP:
+      move_string += "b";
+      break;
+    case KNIGHT:
+      move_string += "n";
+      break;
+  }
+
+  return move_string;
 }
