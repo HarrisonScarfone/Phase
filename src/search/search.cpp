@@ -1,22 +1,27 @@
 #include "search.hpp"
 
 #include <algorithm>
-#include <chrono>
 #include <iostream>
 #include <limits>
 #include <ranges>
-#include <vector>
 
 #include "../evaluator/evaluator.hpp"
 #include "../game/moves.hpp"
 
 #define CHECKMATE_FOR_LAST_PLAYER -75000
+#define CHECKMATE_FOR_CURRENT_PLAYER 75000
 #define THEIR_BEST_MOVE_START_VAL 100000
 #define MY_BEST_MOVE_START_VAL -100000
 
 // define some depth limits
 #define MAX_KILLER_HISTORY_DEPTH 100
 #define MAX_QUIESCENCE_DEPTH 3
+
+// max search depth of 20 for now
+#define MAX_SEARCH_DEPTH 7
+
+// stop searching if we have been going for 10s
+#define MAX_SEARCH_TIME_IN_MILISECONDS 10000
 
 // clang-format off
 // Attacker K->B->R->Q->K->P (left to right)
@@ -88,19 +93,14 @@ std::vector<uint32_t> inline ordered_moves_for_search(Position* position, int de
   return moves;
 }
 
-uint32_t find_move_with_statistics(Position* position, int depth)
+uint32_t find_move_and_display_statistics(Position* position)
 {
-  uint64_t nodes = 0;
-  auto start_time = std::chrono::high_resolution_clock::now();
-  uint32_t best_move = find_move(position, depth, &nodes);
-  auto end_time = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-
+  find_move_return_val fmrv = find_move(position);
   float nps;
 
   try
   {
-    nps = nodes / ((duration.count() + 1.0) / 1000);
+    nps = fmrv.nodes / ((fmrv.miliseconds_of_search_time.count() + 1.0) / 1000);
   }
   catch (const std::exception& e)
   {
@@ -108,47 +108,70 @@ uint32_t find_move_with_statistics(Position* position, int depth)
   }
 
   std::cout << "info"
-            << " nodes " << nodes << " nps " << nps << " time " << duration.count() << std::endl;
+            << " nodes " << fmrv.nodes << " nps " << nps << " time " << fmrv.miliseconds_of_search_time.count()
+            << " eval " << fmrv.position_score << std::endl;
 
-  return best_move;
+  return fmrv.best_move;
 }
 
-uint32_t find_move(Position* position, int depth, uint64_t* nodes)
+find_move_return_val find_move(Position* position)
 {
-  uint32_t best_move;
-  int_fast32_t best_score = MY_BEST_MOVE_START_VAL;
-  for (int i = 1; i <= depth; i++)
+  uint32_t last_best_move, current_best_move;
+  int_fast32_t last_best_score, current_best_score;
+  uint64_t nodes = 0;
+  int depth;
+
+  auto start_time = std::chrono::high_resolution_clock::now();
+
+  for (depth = 1; depth <= MAX_SEARCH_DEPTH; depth++)
   {
-    best_score = MY_BEST_MOVE_START_VAL;
+    std::cout << "info depth " << depth << std::endl;
+    current_best_score = MY_BEST_MOVE_START_VAL;
     int_fast32_t current_score = 0;
-    std::vector<uint32_t> moves = ordered_moves_for_search(position, i);
+    std::vector<uint32_t> moves = ordered_moves_for_search(position, depth);
 
     for (uint32_t move : moves)
     {
       Position new_position = make_move(position, move);
-      current_score = -negamax(&new_position, i - 1, -THEIR_BEST_MOVE_START_VAL, -MY_BEST_MOVE_START_VAL, nodes);
-      *nodes += 1;
+      current_score = -principal_variation_search(&new_position, depth - 1, -THEIR_BEST_MOVE_START_VAL,
+                                                  -MY_BEST_MOVE_START_VAL, &nodes);
 
-      if (current_score > best_score)
+      nodes += 1;
+
+      if (current_score > current_best_score)
       {
-        best_move = move;
-        best_score = current_score;
+        current_best_move = move;
+        current_best_score = current_score;
+      }
+
+      auto end_time = std::chrono::high_resolution_clock::now();
+      auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+
+      if (duration.count() > MAX_SEARCH_TIME_IN_MILISECONDS)
+      {
+        // this is a time cutoff, so return the best move in the last iteration
+        return {last_best_move, nodes, duration, depth, last_best_score};
       }
     }
 
-    if (best_score == CHECKMATE_FOR_LAST_PLAYER)
+    // no need to deepen if we've found a checkmate
+    if (current_best_score == CHECKMATE_FOR_LAST_PLAYER)
     {
-      // we want to return the earliest mate
-      return best_move;
+      break;
     }
+
+    last_best_move = current_best_move;
+    last_best_score = current_best_score;
   }
 
-  std::cout << "info"
-            << " eval " << best_score << std::endl;
-  return best_move;
+  auto end_time = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+  // depth cutoff or checkmate return, we can use the current best move and score
+  return {current_best_move, nodes, duration, depth, current_best_score};
 }
 
-int_fast32_t negamax(Position* position, int depth, int_fast32_t alpha, int_fast32_t beta, uint64_t* nodes)
+int_fast32_t principal_variation_search(Position* position, int depth, int_fast32_t alpha, int_fast32_t beta,
+                                        uint64_t* nodes)
 {
   if (depth == 0)
   {
@@ -193,18 +216,18 @@ int_fast32_t negamax(Position* position, int depth, int_fast32_t alpha, int_fast
 
     if (first_move)
     {
-      score = -negamax(&new_position, depth - 1, -beta, -alpha, nodes);
+      score = -principal_variation_search(&new_position, depth - 1, -beta, -alpha, nodes);
       *nodes += 1;
       first_move = false;
     }
     else
     {
-      score = -negamax(&new_position, depth - 1, -alpha - 1, -alpha, nodes);
+      score = -principal_variation_search(&new_position, depth - 1, -alpha - 1, -alpha, nodes);
       *nodes += 1;
 
       if (alpha < score && score < beta)
       {
-        score = -negamax(&new_position, depth - 1, -beta, -score, nodes);
+        score = -principal_variation_search(&new_position, depth - 1, -beta, -score, nodes);
         *nodes += 1;
       }
     }

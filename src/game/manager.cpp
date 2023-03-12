@@ -74,7 +74,7 @@ void Manager::update_to_position(std::vector<std::string> tokens)
 
 std::string Manager::get_next_move()
 {
-  uint32_t move = find_move_with_statistics(&position, 7);
+  uint32_t move = find_move_and_display_statistics(&position);
   std::string move_string = "";
   move_string += int_to_string(decode_from_square(move));
   move_string += int_to_string(decode_to_square(move));
