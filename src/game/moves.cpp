@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "../util/zobrist.hpp"
+
 PieceAsInt victim_on_square(Position* position, Square square)
 {
   uint64_t target_bitboard = int_location_to_bitboard(square);
@@ -40,16 +42,58 @@ Position make_move(Position* position, uint32_t move)
 {
   Position new_position = *position;
 
-  uint64_t from_square = int_location_to_bitboard(decode_from_square(move));
-  uint64_t to_square = int_location_to_bitboard(decode_to_square(move));
+  int from_sq = decode_from_square(move);
+  int to_sq = decode_to_square(move);
+  uint64_t from_square = int_location_to_bitboard(from_sq);
+  uint64_t to_square = int_location_to_bitboard(to_sq);
   bool double_push = decode_double_push(move);
   bool castling = decode_castling(move);
   bool capture = decode_capture(move);
   bool enpassant = decode_enpassant(move);
+  PieceAsInt moved_piece = decode_moved_piece(move);
   PieceAsInt promotion_piece = decode_promoted_to_piece(move);
+
+  // Color of moving side: 1 = white, 0 = black
+  int us = position->white_to_move ? 1 : 0;
+  int them = 1 - us;
+
+  // Start with current hash
+  uint64_t hash = position->hash;
+
+  // XOR out old castling rights
+  hash ^= zobrist::castling_keys[zobrist::castling_rights_index(*position)];
+
+  // XOR out old en passant file if any
+  if (position->enPassantTarget)
+  {
+    int ep_file = file_of(bitscan(position->enPassantTarget));
+    hash ^= zobrist::ep_file_keys[ep_file];
+  }
+
+  // Flip side to move
+  hash ^= zobrist::side_key;
+
+  // Update half-move clock (reset on pawn move or capture)
+  if (moved_piece == PAWN || capture)
+  {
+    new_position.half_move_clock = 0;
+  }
+  else
+  {
+    new_position.half_move_clock++;
+  }
+
+  // Increment full move clock after black's move
+  if (!position->white_to_move)
+  {
+    new_position.full_move_clock++;
+  }
 
   new_position.enPassantTarget = 0ull;
   new_position.white_to_move = !position->white_to_move;
+
+  // Remove moving piece from source square (hash)
+  hash ^= zobrist::piece_keys[us][moved_piece][from_sq];
 
   if (position->white_to_move)
   {
@@ -72,6 +116,43 @@ Position make_move(Position* position, uint32_t move)
 
   if (capture)
   {
+    // Determine captured piece type for hash update
+    PieceAsInt captured_piece;
+    int captured_sq = to_sq;
+
+    if (enpassant)
+    {
+      captured_piece = PAWN;
+      captured_sq = position->white_to_move ? to_sq + 8 : to_sq - 8;
+    }
+    else
+    {
+      // Determine captured piece from position bitboards
+      if (position->pawns & to_square)
+        captured_piece = PAWN;
+      else if (position->knights & to_square)
+        captured_piece = KNIGHT;
+      else if (position->bishops & to_square)
+        captured_piece = BISHOP;
+      else if (position->rooks & to_square)
+        captured_piece = ROOK;
+      else
+        captured_piece = QUEEN;
+    }
+
+    // XOR out captured piece from hash
+    hash ^= zobrist::piece_keys[them][captured_piece][captured_sq];
+
+    // Also revoke castling rights if capturing a rook on its starting square
+    if (to_square == int_location_to_bitboard(h1))
+      new_position.white_can_castle_kingside = false;
+    else if (to_square == int_location_to_bitboard(a1))
+      new_position.white_can_castle_queenside = false;
+    else if (to_square == int_location_to_bitboard(h8))
+      new_position.black_can_castle_kingside = false;
+    else if (to_square == int_location_to_bitboard(a8))
+      new_position.black_can_castle_queenside = false;
+
     new_position.bishops &= ~to_square;
     new_position.rooks &= ~to_square;
     new_position.pawns &= ~to_square;
@@ -93,19 +174,22 @@ Position make_move(Position* position, uint32_t move)
     }
   }
 
-  switch (decode_moved_piece(move))
+  switch (moved_piece)
   {
     case KNIGHT:
       new_position.knights ^= from_square;
       new_position.knights |= to_square;
+      hash ^= zobrist::piece_keys[us][KNIGHT][to_sq];
       break;
     case BISHOP:
       new_position.bishops ^= from_square;
       new_position.bishops |= to_square;
+      hash ^= zobrist::piece_keys[us][BISHOP][to_sq];
       break;
     case ROOK:
       new_position.rooks ^= from_square;
       new_position.rooks |= to_square;
+      hash ^= zobrist::piece_keys[us][ROOK][to_sq];
 
       if (position->white_to_move)
       {
@@ -133,12 +217,15 @@ Position make_move(Position* position, uint32_t move)
     case QUEEN:
       new_position.queens ^= from_square;
       new_position.queens |= to_square;
+      hash ^= zobrist::piece_keys[us][QUEEN][to_sq];
       break;
     case PAWN:
       new_position.pawns ^= from_square;
 
       if (promotion_piece != NO_PIECE)
       {
+        // Add promoted piece to hash (not pawn)
+        hash ^= zobrist::piece_keys[us][promotion_piece][to_sq];
         switch (promotion_piece)
         {
           case BISHOP:
@@ -153,50 +240,67 @@ Position make_move(Position* position, uint32_t move)
           case QUEEN:
             new_position.queens |= to_square;
             break;
+          default:
+            break;
         }
       }
       else
       {
         new_position.pawns |= to_square;
+        hash ^= zobrist::piece_keys[us][PAWN][to_sq];
       }
       break;
     case KING:
       new_position.kings ^= from_square;
       new_position.kings |= to_square;
+      hash ^= zobrist::piece_keys[us][KING][to_sq];
+
       if (castling)
       {
         if (position->white_to_move)
         {
           if (to_square == int_location_to_bitboard(g1))
           {
+            // Kingside castle - move rook from h1 to f1
             new_position.rooks ^= int_location_to_bitboard(h1);
             new_position.rooks |= int_location_to_bitboard(f1);
             new_position.white ^= int_location_to_bitboard(h1);
             new_position.white |= int_location_to_bitboard(f1);
+            hash ^= zobrist::piece_keys[1][ROOK][h1];
+            hash ^= zobrist::piece_keys[1][ROOK][f1];
           }
           else if (to_square == int_location_to_bitboard(c1))
           {
+            // Queenside castle - move rook from a1 to d1
             new_position.rooks ^= int_location_to_bitboard(a1);
             new_position.rooks |= int_location_to_bitboard(d1);
             new_position.white ^= int_location_to_bitboard(a1);
             new_position.white |= int_location_to_bitboard(d1);
+            hash ^= zobrist::piece_keys[1][ROOK][a1];
+            hash ^= zobrist::piece_keys[1][ROOK][d1];
           }
         }
         else
         {
           if (to_square == int_location_to_bitboard(g8))
           {
+            // Kingside castle - move rook from h8 to f8
             new_position.rooks ^= int_location_to_bitboard(h8);
             new_position.rooks |= int_location_to_bitboard(f8);
             new_position.black ^= int_location_to_bitboard(h8);
             new_position.black |= int_location_to_bitboard(f8);
+            hash ^= zobrist::piece_keys[0][ROOK][h8];
+            hash ^= zobrist::piece_keys[0][ROOK][f8];
           }
           else if (to_square == int_location_to_bitboard(c8))
           {
+            // Queenside castle - move rook from a8 to d8
             new_position.rooks ^= int_location_to_bitboard(a8);
             new_position.rooks |= int_location_to_bitboard(d8);
             new_position.black ^= int_location_to_bitboard(a8);
             new_position.black |= int_location_to_bitboard(d8);
+            hash ^= zobrist::piece_keys[0][ROOK][a8];
+            hash ^= zobrist::piece_keys[0][ROOK][d8];
           }
         }
       }
@@ -211,7 +315,21 @@ Position make_move(Position* position, uint32_t move)
         new_position.black_can_castle_queenside = false;
       }
       break;
+    default:
+      break;
   }
+
+  // XOR in new castling rights
+  hash ^= zobrist::castling_keys[zobrist::castling_rights_index(new_position)];
+
+  // XOR in new en passant file if any
+  if (new_position.enPassantTarget)
+  {
+    int ep_file = file_of(bitscan(new_position.enPassantTarget));
+    hash ^= zobrist::ep_file_keys[ep_file];
+  }
+
+  new_position.hash = hash;
 
   return new_position;
 }

@@ -92,6 +92,8 @@ struct Position
 
   short int half_move_clock = 0;
   short int full_move_clock = 0;
+
+  uint64_t hash = 0;  // Zobrist hash of the position
 };
 
 inline uint64_t white_kings(Position* position) { return position->white & position->kings; }

@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "util.hpp"
+#include "zobrist.hpp"
 
 Position Util::Initializers::starting_position()
 {
@@ -28,6 +29,9 @@ Position Util::Initializers::fen_string_to_position(std::string fen_string)
   Util::Initializers::update_position_from_fen_token_3(&new_position, tokens.at(3));
   Util::Initializers::update_position_from_fen_token_4(&new_position, tokens.at(4));
   Util::Initializers::update_position_from_fen_token_5(&new_position, tokens.at(5));
+
+  // Compute Zobrist hash for the position
+  new_position.hash = zobrist::compute_hash(new_position);
 
   return new_position;
 }

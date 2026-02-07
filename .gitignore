@@ -24,3 +24,9 @@ build
 
 # Logging Output
 logging
+
+# Polyglot config
+phase.ini
+
+# Cutechess
+cutechess-cli

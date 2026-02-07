@@ -1,13 +1,18 @@
 #include <iostream>
 
+#include "book/book.hpp"
 #include "search/search.hpp"
 #include "uci/uci.hpp"
 #include "util/global.hpp"
 #include "util/initializers.hpp"
 #include "util/util.hpp"
+#include "util/zobrist.hpp"
 
 int main()
 {
+  zobrist::init();
+  book::init();
+
   UCI uci = UCI();
   uci.start();
 
